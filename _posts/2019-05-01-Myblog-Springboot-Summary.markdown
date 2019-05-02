@@ -6,6 +6,7 @@ date:       2019-04-29 12:00:00
 author:     "Ubik"
 header-img: "img/post-bg-2015.jpg"
 catalog: true
+comments: true
 tags:
     - Summary
     - Project
