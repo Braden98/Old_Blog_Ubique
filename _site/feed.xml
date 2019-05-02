@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Ubik Blog</title>
+    <description>关于技术与生活，探索与分享 | 丁彪，Programmer,Software Engineer,amateur writer | 这里是 @Ubik丁彪 的个人博客，与你一起发现更大的世界。</description>
+    <link>http://localhost:4000/</link>
+    <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml" />
+    <pubDate>Thu, 02 May 2019 09:41:03 +0800</pubDate>
+    <lastBuildDate>Thu, 02 May 2019 09:41:03 +0800</lastBuildDate>
+    <generator>Jekyll v3.8.5</generator>
+    
+      <item>
+        <title>基于SpringBoot的MyBlog项目总结</title>
+        <description>&lt;h2 id=&quot;概述&quot;&gt;概述&lt;/h2&gt;
+&lt;h4 id=&quot;时间&quot;&gt;时间&lt;/h4&gt;
+&lt;p&gt;两周左右&lt;/p&gt;
+&lt;h4 id=&quot;思路&quot;&gt;思路&lt;/h4&gt;
+&lt;p&gt;整体使用Springboot进行后台快速开发，通过纯注解的方式使用SpringMVC来完成URL跳转和模型视图控制器的解耦，避免了配置文件的繁琐。同时利用Spring的AOP完成log功能，DI完成Service层中DAO层的注入，也没有使用配置文件。
+对于ORM，选择Mybatis，通过xml配置文件的方式完成（为了以后扩展，注解方式不太好写复杂的sql语句）
+整体使用REST，通过名词的URL+http动作来给后台传输数据，后台根据controller层的requestmapping注解选择合适的方法处理，在方法中调用Service层的服务得到ViewObject，通过setattributes传给视图层，并处理一些特殊情况和错误。&lt;/p&gt;
+&lt;h4 id=&quot;技术栈&quot;&gt;技术栈&lt;/h4&gt;
+&lt;ol&gt;
+  &lt;li&gt;Springboot快速开发&lt;/li&gt;
+  &lt;li&gt;Mybatis ORM框架减少DB代码&lt;/li&gt;
+  &lt;li&gt;前端CSS网上找的&lt;/li&gt;
+  &lt;li&gt;调试、部署&lt;/li&gt;
+  &lt;li&gt;大头：maven bug解决（最终发现是setting.xml设置问题，当初为了用aliyun的mirrors加快速度，从网上找的配置文件，结果出了问题。）&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;思考&quot;&gt;思考&lt;/h2&gt;
+&lt;p&gt;这个项目花的最多的时间不是写后端代码，而是调试mvn，package老是不成功，通过各种命令分析，包括但不限于tree分析依赖关系，更换mvn仓库，mirror源。在mvn打包Springboot不成功之后尝试按照之前的web项目打war包，或者用docker配置。
+最终在用docker配置时的错误信息使我发现是setting.xml的本地仓库配置有问题，这也解释了为什么我的IDEA的默认maven配置文件和仓库不匹配（之前不匹配我都以为是我修改了IDEA的默认自带的maven仓库导致的）。
+问题的关键在于我的IDEA的pom配置文件和终端的mvn命令默认的配置文件不一致：这是IDEA的锅。&lt;img src=&quot;media/15551210694422/15551216154796.jpg&quot; alt=&quot;-w1043&quot; /&gt;
+settings文件一开始不是这个，这就导致了所有的问题。&lt;/p&gt;
+
+&lt;p&gt;这段经历使我收获了很多，面对bug，最重要的是要仔细读报错信息，如本次在用docker配置之前的&lt;code class=&quot;highlighter-rouge&quot;&gt;mvn clean package&lt;/code&gt;报错“包找不到”，我去IDE看，明明包都在那里，pox.xml也没报错，lib里边也确实有文件。&lt;/p&gt;
+
+&lt;p&gt;最终解决是&lt;code class=&quot;highlighter-rouge&quot;&gt;vim ~/.m2/setting.xml&lt;/code&gt;改对应repo即可。&lt;/p&gt;
+
+&lt;p&gt;其实之前出过几次这样的事，印象最深的是zsh的配置、mysql配置文件以及Spring boot启动事件。得出的经验教训都一样：仔细读报错信息，&lt;strong&gt;分析错误原因（画重点&lt;/strong&gt;）上&lt;a href=&quot;www.google.com&quot;&gt;google&lt;/a&gt; &lt;a href=&quot;https://stackoverflow.com&quot;&gt;stackoverflow&lt;/a&gt;查找错误信息。&lt;/p&gt;
+
+&lt;h2 id=&quot;总结&quot;&gt;总结&lt;/h2&gt;
+&lt;p&gt;从这件事上看，时间大概三成写代码，七成调bug。
+显然效率很低，正确的做法一是加快bug解决速度，二是少写工程性强、“八股文”、无用的代码（比如配置文件，服务器配置，静态资源管理）等，而是多学习，加快知识吸收速度，等实际用到再操作。反正以后工作几十年，工作之后的问题可以找到大牛，现在自己google万一找不出实在影响心情。&lt;/p&gt;
+</description>
+        <pubDate>Mon, 29 Apr 2019 20:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2019/04/29/Myblog-Springboot-Summary/</link>
+        <guid isPermaLink="true">http://localhost:4000/2019/04/29/Myblog-Springboot-Summary/</guid>
+        
+        <category>Summary</category>
+        
+        <category>Project</category>
+        
+        
+      </item>
+    
+  </channel>
+</rss>
