@@ -5,7 +5,7 @@ header-img: img/home-bg.jpg
 email: adam.ubique@gmail.com
 description: "关于技术与生活，探索与分享 | 丁彪，Programmer,Software Engineer,amateur writer | 这里是 @Ubik丁彪 的个人博客，与你一起发现更大的世界。"
 keyword: "丁彪, Ubik丁彪, Ubik, AdamUbik, 丁彪的博客, Ubik Blog, 博客, 个人网站, 互联网, Web, 后端, 架构 "
-url: "https://ubique0305.github.io"              # your host, for absolute URL
+url: https://ubique0305.github.io"             # your host, for absolute URL
 baseurl: ""                             # for example, '/blog' if your blog hosted on 'host/blog'
 
 # Publish posts or collection documents with a future date.
