@@ -28,7 +28,8 @@ tags:
 ## 思考
 这个项目花的最多的时间不是写后端代码，而是调试mvn，package老是不成功，通过各种命令分析，包括但不限于tree分析依赖关系，更换mvn仓库，mirror源。在mvn打包Springboot不成功之后尝试按照之前的web项目打war包，或者用docker配置。
 最终在用docker配置时的错误信息使我发现是setting.xml的本地仓库配置有问题，这也解释了为什么我的IDEA的默认maven配置文件和仓库不匹配（之前不匹配我都以为是我修改了IDEA的默认自带的maven仓库导致的）。
-问题的关键在于我的IDEA的pom配置文件和终端的mvn命令默认的配置文件不一致：这是IDEA的锅。![a](img/post-bg-2015.jpg)
+问题的关键在于我的IDEA的pom配置文件和终端的mvn命令默认的配置文件不一致：这是IDEA的锅。
+![a](img/post-bg-2015.jpg)
 settings文件一开始不是这个，这就导致了所有的问题。
 
 这段经历使我收获了很多，面对bug，最重要的是要仔细读报错信息，如本次在用docker配置之前的`mvn clean package`报错“包找不到”，我去IDE看，明明包都在那里，pox.xml也没报错，lib里边也确实有文件。
