@@ -1,0 +1,1638 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="description" content="关于技术与生活，探索与分享 | 丁彪，Programmer,Software Engineer,amateur writer | 这里是 @Ubik丁彪 的个人博客，与你一起发现更大的世界。">
+    <meta name="keywords"  content="丁彪, Ubik丁彪, Ubik, AdamUbik, 丁彪的博客, Ubik Blog, 博客, 个人网站, 互联网, Web, 后端, 架构 ">
+    <meta name="theme-color" content="#000000">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="代码整洁之道-实践 - 丁彪的博客 | Ubik Blog">
+    
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="
+摘要
+通过阅读一个 Args 程序，了解整洁代码应该是什么样的（极好的可读性），然后通过与重构之前的肮脏代码对比，了解要改进的地方。最后通过作者的先复杂化导致出现代码变脏，随后建立规程优化代码的历程，了解代码整洁的最佳实践。
+系统使用样例
+帮助你理解 Args 程序的功能：通过 Args()构造参数创建实体，解析之后可以使用Get* 用参数名称获取参数值
+
+">
+    
+    <meta property="article:published_time" content="2019-05-18T20:00:00Z">
+    
+    
+    <meta property="article:author" content="Ubik">
+    
+    
+    <meta property="article:tag" content="Summary">
+    
+    <meta property="article:tag" content="Clean Code">
+    
+    <meta property="article:tag" content="实践">
+    
+    
+    <meta property="og:image" content="http://localhost:4000/img/avatar-ubik-ny.png">
+    <meta property="og:url" content="http://localhost:4000/2019/05/18/%E4%BB%A3%E7%A0%81%E6%95%B4%E6%B4%81%E4%B9%8B%E9%81%93-%E5%AE%9E%E8%B7%B5/">
+    <meta property="og:site_name" content="丁彪的博客 | Ubik Blog">
+    
+    <title>代码整洁之道-实践 - 丁彪的博客 | Ubik Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="http://localhost:4000/2019/05/18/%E4%BB%A3%E7%A0%81%E6%95%B4%E6%B4%81%E4%B9%8B%E9%81%93-%E5%AE%9E%E8%B7%B5/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/hux-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Ubik Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    
+                    
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    
+                    
+                    <li>
+                        <a href="/archive/">Archive</a>
+                    </li>
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Image to hack wechat -->
+<!-- <img src="/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="/img/post-bg-2015.jpg" width="0" height="0"> -->
+
+<!-- Post Header -->
+
+
+
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/post-bg-2015.jpg');
+        background: ;
+    }
+
+    
+</style>
+
+<header class="intro-header" >
+
+    <div class="header-mask"></div>
+    
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/archive/?tag=Summary" title="Summary">Summary</a>
+                        
+                        <a class="tag" href="/archive/?tag=Clean+Code" title="Clean Code">Clean Code</a>
+                        
+                        <a class="tag" href="/archive/?tag=%E5%AE%9E%E8%B7%B5" title="实践">实践</a>
+                        
+                    </div>
+                    <h1>代码整洁之道-实践</h1>
+                    
+                    <h2 class="subheading"> 不能铭记过去的人，注定要重蹈覆辙。</h2>
+                    <span class="meta">Posted by Ubik on May 18, 2019</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+
+
+
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+				<p><img src="/img/code-clean-practice.jpg" alt="插图" /></p>
+<h1 id="摘要">摘要</h1>
+<p>通过阅读一个 Args 程序，了解整洁代码应该是什么样的（极好的可读性），然后通过与重构之前的肮脏代码对比，了解要改进的地方。最后通过作者的先复杂化导致出现代码变脏，随后建立规程优化代码的历程，了解代码整洁的最佳实践。</p>
+<h1 id="系统使用样例">系统使用样例</h1>
+<p>帮助你理解 Args 程序的功能：通过 Args()构造参数创建实体，解析之后可以使用Get* 用参数名称获取参数值</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+</pre></td><td class="rouge-code"><pre><span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">try</span> <span class="o">{</span>
+        <span class="n">Args</span> <span class="n">arg</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Args</span><span class="o">(</span><span class="s">"l,p#,d*"</span><span class="o">,</span> <span class="n">args</span><span class="o">);</span>
+        <span class="kt">boolean</span> <span class="n">logging</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="na">getBoolean</span><span class="o">(</span><span class="sc">'l'</span><span class="o">);</span>
+        <span class="kt">int</span> <span class="n">port</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="na">getInt</span><span class="o">(</span><span class="sc">'p'</span><span class="o">);</span>
+        <span class="n">String</span> <span class="n">directory</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="na">getString</span><span class="o">(</span><span class="sc">'d'</span><span class="o">);</span>
+        <span class="n">executeApplication</span><span class="o">(</span><span class="n">logging</span><span class="o">,</span> <span class="n">port</span><span class="o">,</span> <span class="n">directory</span><span class="o">);</span>
+    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">ArgsException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">printf</span><span class="o">(</span><span class="s">"Argument error: %s\n"</span><span class="o">,</span> <span class="n">e</span><span class="o">.</span><span class="na">errorMessage</span><span class="o">());</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<h1 id="clean-code">Clean Code</h1>
+<p>上边是一个命令行参数解析程序，我们用这个例子来演示逐步改进，它非常易于使用，只用简单地用输入参数和格式化字符串构造Args类，再向Args对象查询参数值即可。下边是其最终实现。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+</pre></td><td class="rouge-code"><pre><span class="kn">import</span> <span class="nn">static</span> <span class="n">com</span><span class="o">.</span><span class="na">objectmentor</span><span class="o">.</span><span class="na">utilities</span><span class="o">.</span><span class="na">args</span><span class="o">.</span><span class="na">ArgsException</span><span class="o">.</span><span class="na">ErrorCode</span><span class="o">.*;</span>
+<span class="kn">import</span> <span class="nn">java.util.*</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Args</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">Character</span><span class="o">,</span> <span class="n">ArgumentMarshaler</span><span class="o">&gt;</span> <span class="n">marshalers</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="n">Set</span><span class="o">&lt;</span><span class="n">Character</span><span class="o">&gt;</span> <span class="n">argsFound</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="n">ListIterator</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">currentArgument</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">Args</span><span class="o">(</span><span class="n">String</span> <span class="n">schema</span><span class="o">,</span> <span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ArgsException</span> <span class="o">{</span>
+        <span class="n">marshalers</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">Character</span><span class="o">,</span> <span class="n">ArgumentMarshaler</span><span class="o">&gt;();</span>
+        <span class="n">argsFound</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashSet</span><span class="o">&lt;</span><span class="n">Character</span><span class="o">&gt;();</span>
+
+        <span class="n">parseSchema</span><span class="o">(</span><span class="n">schema</span><span class="o">);</span>
+        <span class="n">parseArgumentStrings</span><span class="o">(</span><span class="n">Arrays</span><span class="o">.</span><span class="na">asList</span><span class="o">(</span><span class="n">args</span><span class="o">));</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">parseSchema</span><span class="o">(</span><span class="n">String</span> <span class="n">schema</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ArgsException</span> <span class="o">{</span>
+        <span class="k">for</span> <span class="o">(</span><span class="n">String</span> <span class="n">element</span> <span class="o">:</span> <span class="n">schema</span><span class="o">.</span><span class="na">split</span><span class="o">(</span><span class="s">","</span><span class="o">))</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">element</span><span class="o">.</span><span class="na">length</span><span class="o">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span>
+                <span class="n">parseSchemaElement</span><span class="o">(</span><span class="n">element</span><span class="o">.</span><span class="na">trim</span><span class="o">());</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">parseSchemaElement</span><span class="o">(</span><span class="n">String</span> <span class="n">element</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ArgsException</span> <span class="o">{</span>
+        <span class="kt">char</span> <span class="n">elementId</span> <span class="o">=</span> <span class="n">element</span><span class="o">.</span><span class="na">charAt</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+        <span class="n">String</span> <span class="n">elementTail</span> <span class="o">=</span> <span class="n">element</span><span class="o">.</span><span class="na">substring</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+        <span class="n">validateSchemaElementId</span><span class="o">(</span><span class="n">elementId</span><span class="o">);</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">elementTail</span><span class="o">.</span><span class="na">length</span><span class="o">()</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span>
+            <span class="n">marshalers</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">elementId</span><span class="o">,</span> <span class="k">new</span> <span class="n">BooleanArgumentMarshaler</span><span class="o">());</span>
+        <span class="k">else</span> <span class="nf">if</span> <span class="o">(</span><span class="n">elementTail</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="s">"*"</span><span class="o">))</span>
+            <span class="n">marshalers</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">elementId</span><span class="o">,</span> <span class="k">new</span> <span class="n">StringArgumentMarshaler</span><span class="o">());</span>
+        <span class="k">else</span> <span class="nf">if</span> <span class="o">(</span><span class="n">elementTail</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="s">"#"</span><span class="o">))</span>
+            <span class="n">marshalers</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">elementId</span><span class="o">,</span> <span class="k">new</span> <span class="n">IntegerArgumentMarshaler</span><span class="o">());</span>
+        <span class="k">else</span> <span class="nf">if</span> <span class="o">(</span><span class="n">elementTail</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="s">"##"</span><span class="o">))</span>
+            <span class="n">marshalers</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">elementId</span><span class="o">,</span> <span class="k">new</span> <span class="n">DoubleArgumentMarshaler</span><span class="o">());</span>
+        <span class="k">else</span> <span class="nf">if</span> <span class="o">(</span><span class="n">elementTail</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="s">"[*]"</span><span class="o">))</span>
+            <span class="n">marshalers</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">elementId</span><span class="o">,</span> <span class="k">new</span> <span class="n">StringArrayArgumentMarshaler</span><span class="o">());</span>
+        <span class="k">else</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nf">ArgsException</span><span class="o">(</span><span class="n">INVALID_ARGUMENT_FORMAT</span><span class="o">,</span> <span class="n">elementId</span><span class="o">,</span> <span class="n">elementTail</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">validateSchemaElementId</span><span class="o">(</span><span class="kt">char</span> <span class="n">elementId</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ArgsException</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(!</span><span class="n">Character</span><span class="o">.</span><span class="na">isLetter</span><span class="o">(</span><span class="n">elementId</span><span class="o">))</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nf">ArgsException</span><span class="o">(</span><span class="n">INVALID_ARGUMENT_NAME</span><span class="o">,</span> <span class="n">elementId</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">parseArgumentStrings</span><span class="o">(</span><span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">argsList</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ArgsException</span>
+    <span class="o">{</span>
+        <span class="k">for</span> <span class="o">(</span><span class="n">currentArgument</span> <span class="o">=</span> <span class="n">argsList</span><span class="o">.</span><span class="na">listIterator</span><span class="o">();</span> <span class="n">currentArgument</span><span class="o">.</span><span class="na">hasNext</span><span class="o">();)</span>
+        <span class="o">{</span>
+            <span class="n">String</span> <span class="n">argString</span> <span class="o">=</span> <span class="n">currentArgument</span><span class="o">.</span><span class="na">next</span><span class="o">();</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">argString</span><span class="o">.</span><span class="na">startsWith</span><span class="o">(</span><span class="s">"-"</span><span class="o">))</span> <span class="o">{</span>
+                <span class="n">parseArgumentCharacters</span><span class="o">(</span><span class="n">argString</span><span class="o">.</span><span class="na">substring</span><span class="o">(</span><span class="mi">1</span><span class="o">));</span>
+            <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+                <span class="n">currentArgument</span><span class="o">.</span><span class="na">previous</span><span class="o">();</span>
+                <span class="k">break</span><span class="o">;</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">parseArgumentCharacters</span><span class="o">(</span><span class="n">String</span> <span class="n">argChars</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ArgsException</span> <span class="o">{</span>
+        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">argChars</span><span class="o">.</span><span class="na">length</span><span class="o">();</span> <span class="n">i</span><span class="o">++)</span>
+            <span class="n">parseArgumentCharacter</span><span class="o">(</span><span class="n">argChars</span><span class="o">.</span><span class="na">charAt</span><span class="o">(</span><span class="n">i</span><span class="o">));</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">parseArgumentCharacter</span><span class="o">(</span><span class="kt">char</span> <span class="n">argChar</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ArgsException</span> <span class="o">{</span>
+        <span class="n">ArgumentMarshaler</span> <span class="n">m</span> <span class="o">=</span> <span class="n">marshalers</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">argChar</span><span class="o">);</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">m</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nf">ArgsException</span><span class="o">(</span><span class="n">UNEXPECTED_ARGUMENT</span><span class="o">,</span> <span class="n">argChar</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+            <span class="n">argsFound</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">argChar</span><span class="o">);</span>
+            <span class="k">try</span> <span class="o">{</span>
+                <span class="n">m</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="n">currentArgument</span><span class="o">);</span>
+            <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">ArgsException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">e</span><span class="o">.</span><span class="na">setErrorArgumentId</span><span class="o">(</span><span class="n">argChar</span><span class="o">);</span>
+                <span class="k">throw</span> <span class="n">e</span><span class="o">;</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">has</span><span class="o">(</span><span class="kt">char</span> <span class="n">arg</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">argsFound</span><span class="o">.</span><span class="na">contains</span><span class="o">(</span><span class="n">arg</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">nextArgument</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">currentArgument</span><span class="o">.</span><span class="na">nextIndex</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">getBoolean</span><span class="o">(</span><span class="kt">char</span> <span class="n">arg</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">BooleanArgumentMarshaler</span><span class="o">.</span><span class="na">getValue</span><span class="o">(</span><span class="n">marshalers</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">arg</span><span class="o">));</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getString</span><span class="o">(</span><span class="kt">char</span> <span class="n">arg</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">StringArgumentMarshaler</span><span class="o">.</span><span class="na">getValue</span><span class="o">(</span><span class="n">marshalers</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">arg</span><span class="o">));</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getInt</span><span class="o">(</span><span class="kt">char</span> <span class="n">arg</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">IntegerArgumentMarshaler</span><span class="o">.</span><span class="na">getValue</span><span class="o">(</span><span class="n">marshalers</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">arg</span><span class="o">));</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">double</span> <span class="nf">getDouble</span><span class="o">(</span><span class="kt">char</span> <span class="n">arg</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">DoubleArgumentMarshaler</span><span class="o">.</span><span class="na">getValue</span><span class="o">(</span><span class="n">marshalers</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">arg</span><span class="o">));</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">String</span><span class="o">[]</span> <span class="nf">getStringArray</span><span class="o">(</span><span class="kt">char</span> <span class="n">arg</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">StringArrayArgumentMarshaler</span><span class="o">.</span><span class="na">getValue</span><span class="o">(</span><span class="n">marshalers</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">arg</span><span class="o">));</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<h2 id="argumentmarshaler-接口">ArgumentMarshaler 接口</h2>
+<p>很明显 ArgumentMarshaler 接口在 Map 中充当 Value，他的接口实现如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+</pre></td><td class="rouge-code"><pre><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">ArgumentMarshaler</span> <span class="o">{</span>
+    <span class="kt">void</span> <span class="nf">set</span><span class="o">(</span><span class="n">Iterator</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">currentArgument</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ArgsException</span><span class="o">;</span>
+<span class="o">}</span>
+<span class="c1">//BooleanArgumentMarshaler.java</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">BooleanArgumentMarshaler</span> <span class="kd">implements</span> <span class="n">ArgumentMarshaler</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kt">boolean</span> <span class="n">booleanValue</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">set</span><span class="o">(</span><span class="n">Iterator</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">currentArgument</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ArgsException</span> <span class="o">{</span>
+        <span class="n">booleanValue</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">boolean</span> <span class="nf">getValue</span><span class="o">(</span><span class="n">ArgumentMarshaler</span> <span class="n">am</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">am</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">am</span> <span class="k">instanceof</span> <span class="n">BooleanArgumentMarshaler</span><span class="o">)</span>
+            <span class="k">return</span> <span class="o">((</span><span class="n">BooleanArgumentMarshaler</span><span class="o">)</span> <span class="n">am</span><span class="o">).</span><span class="na">booleanValue</span><span class="o">;</span>
+        <span class="k">else</span>
+            <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+<span class="c1">//StringArgumentMarshaler.java</span>
+<span class="kn">import</span> <span class="nn">static</span> <span class="n">com</span><span class="o">.</span><span class="na">objectmentor</span><span class="o">.</span><span class="na">utilities</span><span class="o">.</span><span class="na">args</span><span class="o">.</span><span class="na">ArgsException</span><span class="o">.</span><span class="na">ErrorCode</span><span class="o">.*;</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">StringArgumentMarshaler</span> <span class="kd">implements</span> <span class="n">ArgumentMarshaler</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">stringValue</span> <span class="o">=</span> <span class="s">""</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">set</span><span class="o">(</span><span class="n">Iterator</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">currentArgument</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ArgsException</span> <span class="o">{</span>
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="n">stringValue</span> <span class="o">=</span> <span class="n">currentArgument</span><span class="o">.</span><span class="na">next</span><span class="o">();</span>
+        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">NoSuchElementException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nf">ArgsException</span><span class="o">(</span><span class="n">MISSING_STRING</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="n">String</span> <span class="nf">getValue</span><span class="o">(</span><span class="n">ArgumentMarshaler</span> <span class="n">am</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">am</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">am</span> <span class="k">instanceof</span> <span class="n">StringArgumentMarshaler</span><span class="o">)</span>
+            <span class="k">return</span> <span class="o">((</span><span class="n">StringArgumentMarshaler</span><span class="o">)</span> <span class="n">am</span><span class="o">).</span><span class="na">stringValue</span><span class="o">;</span>
+        <span class="k">else</span>
+            <span class="k">return</span> <span class="s">""</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<h2 id="argsexception">ArgsException</h2>
+<p>除此之外，还有ArgsException的定义：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+</pre></td><td class="rouge-code"><pre><span class="kn">import</span> <span class="nn">static</span> <span class="n">com</span><span class="o">.</span><span class="na">objectmentor</span><span class="o">.</span><span class="na">utilities</span><span class="o">.</span><span class="na">args</span><span class="o">.</span><span class="na">ArgsException</span><span class="o">.</span><span class="na">ErrorCode</span><span class="o">.*;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">ArgsException</span> <span class="kd">extends</span> <span class="n">Exception</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kt">char</span> <span class="n">errorArgumentId</span> <span class="o">=</span> <span class="sc">'\0'</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">errorParameter</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="n">ErrorCode</span> <span class="n">errorCode</span> <span class="o">=</span> <span class="n">OK</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">ArgsException</span><span class="o">()</span> <span class="o">{}</span>
+
+    <span class="kd">public</span> <span class="nf">ArgsException</span><span class="o">(</span><span class="n">String</span> <span class="n">message</span><span class="o">)</span> <span class="o">{</span><span class="kd">super</span><span class="o">(</span><span class="n">message</span><span class="o">);}</span>
+
+    <span class="kd">public</span> <span class="nf">ArgsException</span><span class="o">(</span><span class="n">ErrorCode</span> <span class="n">errorCode</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">errorCode</span> <span class="o">=</span> <span class="n">errorCode</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="nf">ArgsException</span><span class="o">(</span><span class="n">ErrorCode</span> <span class="n">errorCode</span><span class="o">,</span> <span class="n">String</span> <span class="n">errorParameter</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">errorCode</span> <span class="o">=</span> <span class="n">errorCode</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">errorParameter</span> <span class="o">=</span> <span class="n">errorParameter</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="nf">ArgsException</span><span class="o">(</span><span class="n">ErrorCode</span> <span class="n">errorCode</span><span class="o">,</span>
+    <span class="kt">char</span> <span class="n">errorArgumentId</span><span class="o">,</span> <span class="n">String</span> <span class="n">errorParameter</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">errorCode</span> <span class="o">=</span> <span class="n">errorCode</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">errorParameter</span> <span class="o">=</span> <span class="n">errorParameter</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">errorArgumentId</span> <span class="o">=</span> <span class="n">errorArgumentId</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">char</span> <span class="nf">getErrorArgumentId</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">errorArgumentId</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setErrorArgumentId</span><span class="o">(</span><span class="kt">char</span> <span class="n">errorArgumentId</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">errorArgumentId</span> <span class="o">=</span> <span class="n">errorArgumentId</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getErrorParameter</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">errorParameter</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setErrorParameter</span><span class="o">(</span><span class="n">String</span> <span class="n">errorParameter</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">errorParameter</span> <span class="o">=</span> <span class="n">errorParameter</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">ErrorCode</span> <span class="nf">getErrorCode</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">errorCode</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setErrorCode</span><span class="o">(</span><span class="n">ErrorCode</span> <span class="n">errorCode</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">errorCode</span> <span class="o">=</span> <span class="n">errorCode</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">errorMessage</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">switch</span> <span class="o">(</span><span class="n">errorCode</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">case</span> <span class="nl">OK:</span>
+                <span class="k">return</span> <span class="s">"TILT: Should not get here."</span><span class="o">;</span>
+            <span class="k">case</span> <span class="nl">UNEXPECTED_ARGUMENT:</span>
+                <span class="k">return</span> <span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"Argument -%c unexpected."</span><span class="o">,</span> <span class="n">errorArgumentId</span><span class="o">);</span>
+            <span class="k">case</span> <span class="nl">MISSING_STRING:</span>
+                <span class="k">return</span> <span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"Could not find string parameter for -%c."</span><span class="o">,</span>
+                                <span class="n">errorArgumentId</span><span class="o">);</span>
+            <span class="k">case</span> <span class="nl">INVALID_INTEGER:</span>
+                <span class="k">return</span> <span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"Argument -%c expects an integer but was '%s'."</span><span class="o">,</span>
+                                <span class="n">errorArgumentId</span><span class="o">,</span> <span class="n">errorParameter</span><span class="o">);</span>
+            <span class="k">case</span> <span class="nl">MISSING_INTEGER:</span>
+                <span class="k">return</span> <span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"Could not find integer parameter for -%c."</span><span class="o">,</span>
+                                <span class="n">errorArgumentId</span><span class="o">);</span>
+            <span class="k">case</span> <span class="nl">INVALID_DOUBLE:</span>
+                <span class="k">return</span> <span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"Argument -%c expects a double but was '%s'."</span><span class="o">,</span>
+                                <span class="n">errorArgumentId</span><span class="o">,</span> <span class="n">errorParameter</span><span class="o">);</span>
+            <span class="k">case</span> <span class="nl">MISSING_DOUBLE:</span>
+                <span class="k">return</span> <span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"Could not find double parameter for -%c."</span><span class="o">,</span>
+                                <span class="n">errorArgumentId</span><span class="o">);</span>
+            <span class="k">case</span> <span class="nl">INVALID_ARGUMENT_NAME:</span>
+                <span class="k">return</span> <span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"'%c' is not a valid argument name."</span><span class="o">,</span>
+                                <span class="n">errorArgumentId</span><span class="o">);</span>
+            <span class="k">case</span> <span class="nl">INVALID_ARGUMENT_FORMAT:</span>
+                <span class="k">return</span> <span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"'%s' is not a valid argument format."</span><span class="o">,</span>
+                                <span class="n">errorParameter</span><span class="o">);</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="s">""</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">enum</span> <span class="n">ErrorCode</span> <span class="o">{</span>
+        <span class="n">OK</span><span class="o">,</span> <span class="n">INVALID_ARGUMENT_FORMAT</span><span class="o">,</span> <span class="n">UNEXPECTED_ARGUMENT</span><span class="o">,</span> <span class="n">INVALID_ARGUMENT_NAME</span><span class="o">,</span>
+        <span class="n">MISSING_STRING</span><span class="o">,</span>
+        <span class="n">MISSING_INTEGER</span><span class="o">,</span> <span class="n">INVALID_INTEGER</span><span class="o">,</span>
+        <span class="n">MISSING_DOUBLE</span><span class="o">,</span> <span class="n">INVALID_DOUBLE</span><span class="o">}</span>
+<span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<h1 id="脏代码">脏代码</h1>
+<p>可以看出，代码足够整洁————你可以从第一行看到最后一行，在没有注释的情况下基本理解其含义。但在一开始，代码很肮脏，如下所示。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+</pre></td><td class="rouge-code"><pre><span class="kn">import</span> <span class="nn">java.text.ParseException</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.*</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Args</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">schema</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kt">boolean</span> <span class="n">valid</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="n">Set</span><span class="o">&lt;</span><span class="n">Character</span><span class="o">&gt;</span> <span class="n">unexpectedArguments</span> <span class="o">=</span> <span class="k">new</span> <span class="n">TreeSet</span><span class="o">&lt;</span><span class="n">Character</span><span class="o">&gt;();</span>
+    <span class="kd">private</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">Character</span><span class="o">,</span> <span class="n">Boolean</span><span class="o">&gt;</span> <span class="n">booleanArgs</span> <span class="o">=</span>
+    <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">Character</span><span class="o">,</span> <span class="n">Boolean</span><span class="o">&gt;();</span>
+    <span class="kd">private</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">Character</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="n">stringArgs</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">Character</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;();</span>
+    <span class="kd">private</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">Character</span><span class="o">,</span> <span class="n">Integer</span><span class="o">&gt;</span> <span class="n">intArgs</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">Character</span><span class="o">,</span> <span class="n">Integer</span><span class="o">&gt;();</span>
+    <span class="kd">private</span> <span class="n">Set</span><span class="o">&lt;</span><span class="n">Character</span><span class="o">&gt;</span> <span class="n">argsFound</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashSet</span><span class="o">&lt;</span><span class="n">Character</span><span class="o">&gt;();</span>
+    <span class="kd">private</span> <span class="kt">int</span> <span class="n">currentArgument</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kt">char</span> <span class="n">errorArgumentId</span> <span class="o">=</span> <span class="sc">'\0'</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">errorParameter</span> <span class="o">=</span> <span class="s">"TILT"</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="n">ErrorCode</span> <span class="n">errorCode</span> <span class="o">=</span> <span class="n">ErrorCode</span><span class="o">.</span><span class="na">OK</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="kd">enum</span> <span class="n">ErrorCode</span> <span class="o">{</span>
+        <span class="n">OK</span><span class="o">,</span> <span class="n">MISSING_STRING</span><span class="o">,</span> <span class="n">MISSING_INTEGER</span><span class="o">,</span> <span class="n">INVALID_INTEGER</span><span class="o">,</span> <span class="n">UNEXPECTED_ARGUMENT</span><span class="o">}</span>
+
+    <span class="kd">public</span> <span class="nf">Args</span><span class="o">(</span><span class="n">String</span> <span class="n">schema</span><span class="o">,</span> <span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ParseException</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">schema</span> <span class="o">=</span> <span class="n">schema</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">args</span> <span class="o">=</span> <span class="n">args</span><span class="o">;</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">parse</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">boolean</span> <span class="nf">parse</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">ParseException</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">schema</span><span class="o">.</span><span class="na">length</span><span class="o">()</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">args</span><span class="o">.</span><span class="na">length</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span>
+            <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+        <span class="n">parseSchema</span><span class="o">();</span>
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="n">parseArguments</span><span class="o">();</span>
+        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">ArgsException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="n">valid</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">boolean</span> <span class="nf">parseSchema</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">ParseException</span> <span class="o">{</span>
+        <span class="k">for</span> <span class="o">(</span><span class="n">String</span> <span class="n">element</span> <span class="o">:</span> <span class="n">schema</span><span class="o">.</span><span class="na">split</span><span class="o">(</span><span class="s">","</span><span class="o">))</span> <span class="o">{</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">element</span><span class="o">.</span><span class="na">length</span><span class="o">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">String</span> <span class="n">trimmedElement</span> <span class="o">=</span> <span class="n">element</span><span class="o">.</span><span class="na">trim</span><span class="o">();</span>
+                <span class="n">parseSchemaElement</span><span class="o">(</span><span class="n">trimmedElement</span><span class="o">);</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">parseSchemaElement</span><span class="o">(</span><span class="n">String</span> <span class="n">element</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ParseException</span> <span class="o">{</span>
+        <span class="kt">char</span> <span class="n">elementId</span> <span class="o">=</span> <span class="n">element</span><span class="o">.</span><span class="na">charAt</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+        <span class="n">String</span> <span class="n">elementTail</span> <span class="o">=</span> <span class="n">element</span><span class="o">.</span><span class="na">substring</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+        <span class="n">validateSchemaElementId</span><span class="o">(</span><span class="n">elementId</span><span class="o">);</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">isBooleanSchemaElement</span><span class="o">(</span><span class="n">elementTail</span><span class="o">))</span>
+            <span class="n">parseBooleanSchemaElement</span><span class="o">(</span><span class="n">elementId</span><span class="o">);</span>
+        <span class="k">else</span> <span class="nf">if</span> <span class="o">(</span><span class="n">isStringSchemaElement</span><span class="o">(</span><span class="n">elementTail</span><span class="o">))</span>
+            <span class="n">parseStringSchemaElement</span><span class="o">(</span><span class="n">elementId</span><span class="o">);</span>
+        <span class="k">else</span> <span class="nf">if</span> <span class="o">(</span><span class="n">isIntegerSchemaElement</span><span class="o">(</span><span class="n">elementTail</span><span class="o">))</span> <span class="o">{</span>
+            <span class="n">parseIntegerSchemaElement</span><span class="o">(</span><span class="n">elementId</span><span class="o">);</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nf">ParseException</span><span class="o">(</span>
+                    <span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"Argument: %c has invalid format: %s."</span><span class="o">,</span>
+                    <span class="n">elementId</span><span class="o">,</span> <span class="n">elementTail</span><span class="o">),</span> <span class="mi">0</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">validateSchemaElementId</span><span class="o">(</span><span class="kt">char</span> <span class="n">elementId</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ParseException</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(!</span><span class="n">Character</span><span class="o">.</span><span class="na">isLetter</span><span class="o">(</span><span class="n">elementId</span><span class="o">))</span> <span class="o">{</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nf">ParseException</span><span class="o">(</span>
+                    <span class="s">"Bad character:"</span> <span class="o">+</span> <span class="n">elementId</span> <span class="o">+</span> <span class="s">"in Args format: "</span> <span class="o">+</span> <span class="n">schema</span><span class="o">,</span> <span class="mi">0</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">parseBooleanSchemaElement</span><span class="o">(</span><span class="kt">char</span> <span class="n">elementId</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">booleanArgs</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">elementId</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">parseIntegerSchemaElement</span><span class="o">(</span><span class="kt">char</span> <span class="n">elementId</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">intArgs</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">elementId</span><span class="o">,</span> <span class="mi">0</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">parseStringSchemaElement</span><span class="o">(</span><span class="kt">char</span> <span class="n">elementId</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">stringArgs</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">elementId</span><span class="o">,</span> <span class="s">""</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">boolean</span> <span class="nf">isStringSchemaElement</span><span class="o">(</span><span class="n">String</span> <span class="n">elementTail</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">elementTail</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="s">"*"</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">boolean</span> <span class="nf">isBooleanSchemaElement</span><span class="o">(</span><span class="n">String</span> <span class="n">elementTail</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">elementTail</span><span class="o">.</span><span class="na">length</span><span class="o">()</span> <span class="o">==</span> <span class="mi">0</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">boolean</span> <span class="nf">isIntegerSchemaElement</span><span class="o">(</span><span class="n">String</span> <span class="n">elementTail</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">elementTail</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="s">"#"</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">boolean</span> <span class="nf">parseArguments</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">ArgsException</span> <span class="o">{</span>
+        <span class="k">for</span> <span class="o">(</span><span class="n">currentArgument</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">currentArgument</span> <span class="o">&lt;</span> <span class="n">args</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="n">currentArgument</span><span class="o">++)</span>
+        <span class="o">{</span>
+            <span class="n">String</span> <span class="n">arg</span> <span class="o">=</span> <span class="n">args</span><span class="o">[</span><span class="n">currentArgument</span><span class="o">];</span>
+            <span class="n">parseArgument</span><span class="o">(</span><span class="n">arg</span><span class="o">);</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">parseArgument</span><span class="o">(</span><span class="n">String</span> <span class="n">arg</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ArgsException</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">arg</span><span class="o">.</span><span class="na">startsWith</span><span class="o">(</span><span class="s">"-"</span><span class="o">))</span>
+            <span class="n">parseElements</span><span class="o">(</span><span class="n">arg</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">parseElements</span><span class="o">(</span><span class="n">String</span> <span class="n">arg</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ArgsException</span> <span class="o">{</span>
+        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">arg</span><span class="o">.</span><span class="na">length</span><span class="o">();</span> <span class="n">i</span><span class="o">++)</span>
+            <span class="n">parseElement</span><span class="o">(</span><span class="n">arg</span><span class="o">.</span><span class="na">charAt</span><span class="o">(</span><span class="n">i</span><span class="o">));</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">parseElement</span><span class="o">(</span><span class="kt">char</span> <span class="n">argChar</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ArgsException</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">setArgument</span><span class="o">(</span><span class="n">argChar</span><span class="o">))</span>
+            <span class="n">argsFound</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">argChar</span><span class="o">);</span>
+        <span class="k">else</span> <span class="o">{</span>
+            <span class="n">unexpectedArguments</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">argChar</span><span class="o">);</span>
+        <span class="n">errorCode</span> <span class="o">=</span> <span class="n">ErrorCode</span><span class="o">.</span><span class="na">UNEXPECTED_ARGUMENT</span><span class="o">;</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">boolean</span> <span class="nf">setArgument</span><span class="o">(</span><span class="kt">char</span> <span class="n">argChar</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ArgsException</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">isBooleanArg</span><span class="o">(</span><span class="n">argChar</span><span class="o">))</span>
+            <span class="n">setBooleanArg</span><span class="o">(</span><span class="n">argChar</span><span class="o">,</span> <span class="kc">true</span><span class="o">);</span>
+        <span class="k">else</span> <span class="nf">if</span> <span class="o">(</span><span class="n">isStringArg</span><span class="o">(</span><span class="n">argChar</span><span class="o">))</span>
+            <span class="n">setStringArg</span><span class="o">(</span><span class="n">argChar</span><span class="o">);</span>
+        <span class="k">else</span> <span class="nf">if</span> <span class="o">(</span><span class="n">isIntArg</span><span class="o">(</span><span class="n">argChar</span><span class="o">))</span>
+            <span class="n">setIntArg</span><span class="o">(</span><span class="n">argChar</span><span class="o">);</span>
+        <span class="k">else</span>
+            <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+        <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">boolean</span> <span class="nf">isIntArg</span><span class="o">(</span><span class="kt">char</span> <span class="n">argChar</span><span class="o">)</span> <span class="o">{</span><span class="k">return</span> <span class="n">intArgs</span><span class="o">.</span><span class="na">containsKey</span><span class="o">(</span><span class="n">argChar</span><span class="o">);}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">setIntArg</span><span class="o">(</span><span class="kt">char</span> <span class="n">argChar</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ArgsException</span> <span class="o">{</span>
+        <span class="n">currentArgument</span><span class="o">++;</span>
+        <span class="n">String</span> <span class="n">parameter</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="n">parameter</span> <span class="o">=</span> <span class="n">args</span><span class="o">[</span><span class="n">currentArgument</span><span class="o">];</span>
+            <span class="n">intArgs</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">argChar</span><span class="o">,</span> <span class="k">new</span> <span class="n">Integer</span><span class="o">(</span><span class="n">parameter</span><span class="o">));</span>
+        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">ArrayIndexOutOfBoundsException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">valid</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+            <span class="n">errorArgumentId</span> <span class="o">=</span> <span class="n">argChar</span><span class="o">;</span>
+            <span class="n">errorCode</span> <span class="o">=</span> <span class="n">ErrorCode</span><span class="o">.</span><span class="na">MISSING_INTEGER</span><span class="o">;</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nf">ArgsException</span><span class="o">();</span>
+        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">NumberFormatException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">valid</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+            <span class="n">errorArgumentId</span> <span class="o">=</span> <span class="n">argChar</span><span class="o">;</span>
+            <span class="n">errorParameter</span> <span class="o">=</span> <span class="n">parameter</span><span class="o">;</span>
+            <span class="n">errorCode</span> <span class="o">=</span> <span class="n">ErrorCode</span><span class="o">.</span><span class="na">INVALID_INTEGER</span><span class="o">;</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nf">ArgsException</span><span class="o">();</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">setStringArg</span><span class="o">(</span><span class="kt">char</span> <span class="n">argChar</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ArgsException</span> <span class="o">{</span>
+        <span class="n">currentArgument</span><span class="o">++;</span>
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="n">stringArgs</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">argChar</span><span class="o">,</span> <span class="n">args</span><span class="o">[</span><span class="n">currentArgument</span><span class="o">]);</span>
+        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">ArrayIndexOutOfBoundsException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">valid</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+            <span class="n">errorArgumentId</span> <span class="o">=</span> <span class="n">argChar</span><span class="o">;</span>
+            <span class="n">errorCode</span> <span class="o">=</span> <span class="n">ErrorCode</span><span class="o">.</span><span class="na">MISSING_STRING</span><span class="o">;</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nf">ArgsException</span><span class="o">();</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">boolean</span> <span class="nf">isStringArg</span><span class="o">(</span><span class="kt">char</span> <span class="n">argChar</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">stringArgs</span><span class="o">.</span><span class="na">containsKey</span><span class="o">(</span><span class="n">argChar</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">setBooleanArg</span><span class="o">(</span><span class="kt">char</span> <span class="n">argChar</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">booleanArgs</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">argChar</span><span class="o">,</span> <span class="n">value</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">boolean</span> <span class="nf">isBooleanArg</span><span class="o">(</span><span class="kt">char</span> <span class="n">argChar</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">booleanArgs</span><span class="o">.</span><span class="na">containsKey</span><span class="o">(</span><span class="n">argChar</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">cardinality</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">argsFound</span><span class="o">.</span><span class="na">size</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">usage</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">schema</span><span class="o">.</span><span class="na">length</span><span class="o">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span>
+            <span class="k">return</span> <span class="s">"-["</span> <span class="o">+</span> <span class="n">schema</span> <span class="o">+</span> <span class="s">"]"</span><span class="o">;</span>
+        <span class="k">else</span>
+            <span class="k">return</span> <span class="s">""</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">errorMessage</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+        <span class="k">switch</span> <span class="o">(</span><span class="n">errorCode</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">case</span> <span class="nl">OK:</span>
+                <span class="k">throw</span> <span class="k">new</span> <span class="nf">Exception</span><span class="o">(</span><span class="s">"TILT: Should not get here."</span><span class="o">);</span>
+            <span class="k">case</span> <span class="nl">UNEXPECTED_ARGUMENT:</span>
+                <span class="k">return</span> <span class="nf">unexpectedArgumentMessage</span><span class="o">();</span>
+            <span class="k">case</span> <span class="nl">MISSING_STRING:</span>
+                <span class="k">return</span> <span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"Could not find string parameter for -%c."</span><span class="o">,</span>
+                                <span class="n">errorArgumentId</span><span class="o">);</span>
+            <span class="k">case</span> <span class="nl">INVALID_INTEGER:</span>
+                <span class="k">return</span> <span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"Argument -%c expects an integer but was '%s'."</span><span class="o">,</span>
+                                <span class="n">errorArgumentId</span><span class="o">,</span> <span class="n">errorParameter</span><span class="o">);</span>
+            <span class="k">case</span> <span class="nl">MISSING_INTEGER:</span>
+                <span class="k">return</span> <span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"Could not find integer parameter for -%c."</span><span class="o">,</span>
+                                <span class="n">errorArgumentId</span><span class="o">);</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="s">""</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="n">String</span> <span class="nf">unexpectedArgumentMessage</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">StringBuffer</span> <span class="n">message</span> <span class="o">=</span> <span class="k">new</span> <span class="n">StringBuffer</span><span class="o">(</span><span class="s">"Argument(s) -"</span><span class="o">);</span>
+        <span class="k">for</span> <span class="o">(</span><span class="kt">char</span> <span class="n">c</span> <span class="o">:</span> <span class="n">unexpectedArguments</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">message</span><span class="o">.</span><span class="na">append</span><span class="o">(</span><span class="n">c</span><span class="o">);</span>
+        <span class="o">}</span>
+        <span class="n">message</span><span class="o">.</span><span class="na">append</span><span class="o">(</span><span class="s">" unexpected."</span><span class="o">);</span>
+        <span class="k">return</span> <span class="n">message</span><span class="o">.</span><span class="na">toString</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">boolean</span> <span class="nf">falseIfNull</span><span class="o">(</span><span class="n">Boolean</span> <span class="n">b</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">b</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">b</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">int</span> <span class="nf">zeroIfNull</span><span class="o">(</span><span class="n">Integer</span> <span class="n">i</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">i</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="n">i</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="n">String</span> <span class="nf">blankIfNull</span><span class="o">(</span><span class="n">String</span> <span class="n">s</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">s</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">?</span> <span class="s">""</span> <span class="o">:</span> <span class="n">s</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getString</span><span class="o">(</span><span class="kt">char</span> <span class="n">arg</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="nf">blankIfNull</span><span class="o">(</span><span class="n">stringArgs</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">arg</span><span class="o">));</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getInt</span><span class="o">(</span><span class="kt">char</span> <span class="n">arg</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="nf">zeroIfNull</span><span class="o">(</span><span class="n">intArgs</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">arg</span><span class="o">));</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">getBoolean</span><span class="o">(</span><span class="kt">char</span> <span class="n">arg</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="nf">falseIfNull</span><span class="o">(</span><span class="n">booleanArgs</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">arg</span><span class="o">));</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">has</span><span class="o">(</span><span class="kt">char</span> <span class="n">arg</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">argsFound</span><span class="o">.</span><span class="na">contains</span><span class="o">(</span><span class="n">arg</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">isValid</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">valid</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kd">class</span> <span class="nc">ArgsException</span> <span class="kd">extends</span> <span class="n">Exception</span> <span class="o">{</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>显然，这段代码需要打磨————TILT之类名称奇怪的字符串、HashSet 和 TreeSets，还有奇怪的 try-catch-finally 块。产生这些东西的原因是作者在一开始的只支持 Boolean 类型的代码上强行添加了 String 和 Integer 类。</p>
+
+<p># 如何破坏
+ 通过对比作者的意图、初始目标和最后一段代码，也就是烂的实现，我们可以发现，毁坏程序最好的方法就是<strong>以改动之名大动其结构，有些程序甚至永远不能从这种所谓“改 进”中恢复过来。</strong></p>
+
+<p># 如何改进
+ 作者改进烂代码的方法是 TDD，这样来保证系统始终能够运行，不会作出破坏系统的修改，每次修改都保证系统像之前一样工作。</p>
+
+<p>具体来说，<strong>用JUnit管理单元测试、用 Fitnesse 完成验收测试</strong>，以 wiki 形式写程。从而，随时能够运行这些测试就说名系统以我们期望的方式工作。</p>
+
+<p>个人在改进、重构代码时，也可以采用类似的方法。</p>
+
+<h1 id="参考资料">参考资料</h1>
+<ul>
+  <li>《代码整洁之道》 作者：[美] Robert C·Martin 译者: 韩磊</li>
+</ul>
+
+
+                <hr style="visibility: hidden;">
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2019/05/02/%E4%BB%A3%E7%A0%81%E6%95%B4%E6%B4%81%E4%B9%8B%E9%81%93-%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84%E8%81%8C%E4%B8%9A%E4%BF%AE%E5%85%BB/" data-toggle="tooltip" data-placement="top" title="代码整洁之道">
+                        Previous<br>
+                        <span>代码整洁之道</span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <hr style="visibility: hidden;">
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                    
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+
+
+<section>
+    
+        <hr class="hidden-sm hidden-xs">
+    
+    <h5><a href="/archive/">FEATURED TAGS</a></h5>
+    <div class="tags">
+        
+        
+        
+        </a>
+        
+        
+                <a data-sort="0002" 
+                    href="/archive/?tag=%E5%AE%9E%E8%B7%B5"
+                    title="实践"
+                    rel="2">实践</a>
+        
+                <a data-sort="0001" 
+                    href="/archive/?tag=Summary"
+                    title="Summary"
+                    rel="3">Summary</a>
+        
+                <a data-sort="0002" 
+                    href="/archive/?tag=Clean+Code"
+                    title="Clean Code"
+                    rel="2">Clean Code
+    </div>
+</section>
+
+
+                <!-- Friends Blog -->
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+<!-- add support for mathjax by voleking-->
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "ubiqueadam";
+    var disqus_identifier = "/2019/05/18/代码整洁之道-实践";
+    var disqus_url = "http://localhost:4000/2019/05/18/%E4%BB%A3%E7%A0%81%E6%95%B4%E6%B4%81%E4%B9%8B%E9%81%93-%E5%AE%9E%E8%B7%B5/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <!-- SNS Link -->
+                
+
+
+<ul class="list-inline text-center">
+
+
+  
+  
+  
+  <li>
+    <a target="_blank" href="https://www.zhihu.com/people/ubique-10">
+      <span class="fa-stack fa-lg">
+        <i class="fa fa-circle fa-stack-2x"></i>
+        <i class="fa  fa-stack-1x fa-inverse">知</i>
+      </span>
+    </a>
+  </li>
+  
+  
+  
+  
+  <li>
+    <a target="_blank" href="https://github.com/ubique0305">
+      <span class="fa-stack fa-lg">
+        <i class="fa fa-circle fa-stack-2x"></i>
+        <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+      </span>
+    </a>
+  </li>
+  
+  
+</ul>
+
+                <p class="copyright text-muted">
+                    Copyright &copy; Ubik Blog 2019
+                    <br>
+                    Powered by <a href="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true">Hux Blog</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/hux-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+
+
+
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-139441319-1';
+    var _gaDomain = 'ubique0305.github.io';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+<!-- Baidu Tongji -->
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if ('' == 'true') {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>
