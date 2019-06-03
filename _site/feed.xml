@@ -5,8 +5,8 @@
     <description>关于技术与生活，探索与分享 | 丁彪，Programmer,Software Engineer,amateur writer | 这里是 @Ubik丁彪 的个人博客，与你一起发现更大的世界。</description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml" />
-    <pubDate>Fri, 31 May 2019 22:42:35 +0800</pubDate>
-    <lastBuildDate>Fri, 31 May 2019 22:42:35 +0800</lastBuildDate>
+    <pubDate>Mon, 03 Jun 2019 11:31:24 +0800</pubDate>
+    <lastBuildDate>Mon, 03 Jun 2019 11:31:24 +0800</lastBuildDate>
     <generator>Jekyll v3.8.5</generator>
     
       <item>
@@ -1480,6 +1480,81 @@
         <category>Summary</category>
         
         <category>Project</category>
+        
+        
+      </item>
+    
+      <item>
+        <title>最长回文子串的优化过程</title>
+        <description>&lt;p&gt;这里分享一道有趣的题目，笔者在 POJ 上使用多种不同的方法进行求解，这其中包括最基本的蛮力法、动态规划、分治算法+字符串哈希以及 Manacher 算法和后缀数组。&lt;/p&gt;
+&lt;h2 id=&quot;问题描述&quot;&gt;问题描述&lt;/h2&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;聪明的计算机科学的学生安迪正在参加一个算法课，教授问学生一个简单的问题：“你能提出一个有效的算法来找出字符串中最大回文长度吗？”
+如果一个字符串向前和向后读相同，例如“madam”是回文，而“ACM”则不是回文，则称为回文。
+学生们认识到这是一个经典的问题，但无法给出一个比遍历所有子串和检查它们是否是回文的方法更好的解答，过了一会儿安迪举起手说：“好吧，我有一个更好的。”在他开始解释他的想法之前，他停了一会儿，然后说：“嗯，我有一个更好的算法！”.
+如果你认为你知道安迪的最终解决方案，那就证明它吧！给定一个最多1000000个字符的字符串，查找并打印字符串中最大回文长度。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;暴力法&quot;&gt;暴力法&lt;/h2&gt;
+&lt;p&gt;枚举字符串的每一个子串，判断其是否是回文串，如果是且比 &lt;code class=&quot;highlighter-rouge&quot;&gt;res.length()&lt;/code&gt;，就更新 res 。枚举每个字串需要 O(n^2) 的时间复杂度，判断每一个子串是否为回文串需要 O(n) 的时间复杂度，因此，总的时间复杂度为 O(n^3). 思路非常简单，这里不再赘述,实现如下。&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-Java&quot;&gt;public String longestPalindrome(String s) {
+        if(s.isEmpty()){
+            return s;
+        }
+        String res=s.substring(0,1);
+        for (int i = 0; i &amp;lt; s.length(); i++) {
+            for (int j = i + 1; j &amp;lt;= s.length(); j++) {
+                String k=s.substring(i,j);
+                String rk=new StringBuffer(k).reverse().toString();
+                if(k.equals(rk)&amp;amp;&amp;amp;k.length()&amp;gt;res.length()){
+                    res=k;
+                }
+            }
+        }
+        return res;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&quot;动态规划法&quot;&gt;动态规划法&lt;/h2&gt;
+&lt;p&gt;因为之前解决过最长公共子串 LCS 的问题，于是很自然地想到，将题目所给字符串倒置，利用回文串正序读和逆序读结果一样的特性，对其求 LCS ，res 就是本题的答案。
+但在制作 case 的时候，笔者发现这是错误的解法，因为一旦原来的字符串中已经同时存在某个字串及其逆序，这个算法就无法找到最长的那一个。
+所以应该换如下思路：令 &lt;code class=&quot;highlighter-rouge&quot;&gt;dp[i][j]&lt;/code&gt; 表示 &lt;code class=&quot;highlighter-rouge&quot;&gt;S[i]~S[j]&lt;/code&gt; 所表示的子串是否是回文子串，是则为1，不是则为0，这样根据 &lt;code class=&quot;highlighter-rouge&quot;&gt;S[i]是否=S[j]&lt;/code&gt; ，可以把转移情况分成两类&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;S[i]==S[j]&lt;/code&gt; ,那么只要 &lt;code class=&quot;highlighter-rouge&quot;&gt;S[i+1]～S[j-1]&lt;/code&gt; 是回文子串，那么 &lt;code class=&quot;highlighter-rouge&quot;&gt;S[i]~S[j]&lt;/code&gt; 就是回文子串，如果 &lt;code class=&quot;highlighter-rouge&quot;&gt;S[i+1]～S[j-1]&lt;/code&gt; 不是回文子串，那么 &lt;code class=&quot;highlighter-rouge&quot;&gt;S[i]~S[j]&lt;/code&gt; 就不是回文子串。&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;S[i]!=S[j]&lt;/code&gt; ，那么 &lt;code class=&quot;highlighter-rouge&quot;&gt;S[i]~S[j]&lt;/code&gt; 就不是回文子串。&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;由此可得状态转移方程&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-Java&quot;&gt;dp[i][j]=S[i]==S[j]? dp[i+1][j-1]:0;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;但还有一个问题，对于该状态转移方程，如果按照 i 和 j 从小到大的顺序来枚举子串的两个端点，然后更新 &lt;code class=&quot;highlighter-rouge&quot;&gt;dp[i][j]&lt;/code&gt; ，会无法保证 &lt;code class=&quot;highlighter-rouge&quot;&gt;dp[i+1][j-1]&lt;/code&gt; 已经被计算过，出现空指针异常。注意到回文子串的对称性，通过手动计算 dp 二维数组，发现可通过枚举子串长度的方式进行第一轮遍历，第二遍按照子串的初始位置进行遍历，如此，即可获得正确的dp数组。
+时间复杂度方面，先枚举子串的长度再枚举作第一轮循环，再枚举子串的起始端点作为第二轮循环，因此时间复杂度为 O(n^2),比最基本的蛮力法要好多了。关键代码如下所示（笔者大二上提交 OJ 的 C++ 代码）&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-C++&quot;&gt;for (int L = 3; L &amp;lt;= len; L++)//枚举子串的长度作为一轮遍历的方法
+{
+    for (int i = 0; i + L - 1 &amp;lt; len; i++)//枚举子串的起始端点作为第二轮循环
+    {
+        int j = i + L - 1;//子串的右端点
+        if (S[i] == S[j] &amp;amp;&amp;amp; dp[i + 1][j - 1] == 1) {
+            dp[i][j] = 1;
+            ans = L;//更新最长回文子串长度
+        }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;对于该二重循环，显然其时间复杂度为 O(n^2)。&lt;/p&gt;
+&lt;h2 id=&quot;字符串-hash--二分&quot;&gt;字符串 Hash &amp;amp; 二分&lt;/h2&gt;
+
+&lt;h2 id=&quot;manacher-算法&quot;&gt;Manacher 算法&lt;/h2&gt;
+
+&lt;p&gt;##&lt;/p&gt;
+</description>
+        <pubDate>Mon, 01 Apr 2019 19:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2019/04/01/%E6%9C%80%E9%95%BF%E5%9B%9E%E6%96%87%E5%AD%90%E4%B8%B2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/</link>
+        <guid isPermaLink="true">http://localhost:4000/2019/04/01/%E6%9C%80%E9%95%BF%E5%9B%9E%E6%96%87%E5%AD%90%E4%B8%B2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/</guid>
+        
+        <category>算法</category>
+        
+        <category>优化</category>
         
         
       </item>

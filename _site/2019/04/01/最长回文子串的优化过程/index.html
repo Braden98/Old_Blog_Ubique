@@ -11,12 +11,14 @@
     <meta name="theme-color" content="#000000">
     
     <!-- Open Graph -->
-    <meta property="og:title" content="Import * 真的比单项导入慢吗？ - 丁彪的博客 | Ubik Blog">
+    <meta property="og:title" content="最长回文子串的优化过程 - 丁彪的博客 | Ubik Blog">
     
     <meta property="og:type" content="article">
-    <meta property="og:description" content="在中间件考试的前一天，同学在群里 “问写 Corba 代码的时候能使用 import * 吗？”，老师说这样会把无关的类写入字节码，最好不要这样。
-因为当时已经学习过编译原理，顺便又在看《深入理解 Java Web 技术内幕》一书，于是对这个说法产生了很大的怀疑：Java 的编译器是如此不智能以至于 Bytecode 这种寸土寸金的地方都要因一句 import * 添加很多无关的字节吗？
-于...">
+    <meta property="og:description" content="这里分享一道有趣的题目，笔者在 POJ 上使用多种不同的方法进行求解，这其中包括最基本的蛮力法、动态规划、分治算法+字符串哈希以及 Manacher 算法和后缀数组。
+问题描述
+
+  聪明的计算机科学的学生安迪正在参加一个算法课，教授问学生一个简单的问题：“你能提出一个有效的算法来找出字符串中最大回文长度吗？”
+如果一个字符串向前和向后读相同，例如“madam”是回文，而“ACM”则不是回文...">
     
     <meta property="article:published_time" content="2019-04-01T19:00:00Z">
     
@@ -24,18 +26,16 @@
     <meta property="article:author" content="Ubik">
     
     
-    <meta property="article:tag" content="Java">
+    <meta property="article:tag" content="算法">
     
-    <meta property="article:tag" content="Shell">
-    
-    <meta property="article:tag" content="实践">
+    <meta property="article:tag" content="优化">
     
     
     <meta property="og:image" content="http://localhost:4000/img/avatar-ubik-ny.png">
-    <meta property="og:url" content="http://localhost:4000/2019/04/01/Java-%E4%B8%AD-%E6%8C%89%E9%9C%80%E5%AF%BC%E6%AF%94%E5%8D%95%E7%B1%BB%E5%9E%8B%E5%AF%BC%E5%85%A5%E6%85%A2%E5%A4%9A%E5%B0%91/">
+    <meta property="og:url" content="http://localhost:4000/2019/04/01/%E6%9C%80%E9%95%BF%E5%9B%9E%E6%96%87%E5%AD%90%E4%B8%B2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/">
     <meta property="og:site_name" content="丁彪的博客 | Ubik Blog">
     
-    <title>Import * 真的比单项导入慢吗？ - 丁彪的博客 | Ubik Blog</title>
+    <title>最长回文子串的优化过程 - 丁彪的博客 | Ubik Blog</title>
 
     <!-- Web App Manifest -->
     <link rel="manifest" href="/pwa/manifest.json">
@@ -44,7 +44,7 @@
     <link rel="shortcut icon" href="/img/favicon.ico">
     
     <!-- Canonical URL -->
-    <link rel="canonical" href="http://localhost:4000/2019/04/01/Java-%E4%B8%AD-%E6%8C%89%E9%9C%80%E5%AF%BC%E6%AF%94%E5%8D%95%E7%B1%BB%E5%9E%8B%E5%AF%BC%E5%85%A5%E6%85%A2%E5%A4%9A%E5%B0%91/">
+    <link rel="canonical" href="http://localhost:4000/2019/04/01/%E6%9C%80%E9%95%BF%E5%9B%9E%E6%96%87%E5%AD%90%E4%B8%B2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/">
 
     <!-- Bootstrap Core CSS -->
     <link rel="stylesheet" href="/css/bootstrap.min.css">
@@ -180,7 +180,7 @@
 
     <!-- Image to hack wechat -->
 <!-- <img src="/img/icon_wechat.png" width="0" height="0"> -->
-<!-- <img src="/img/post-bg-css.jpg" width="0" height="0"> -->
+<!-- <img src="/img/post-bg-miui6.jpg" width="0" height="0"> -->
 
 <!-- Post Header -->
 
@@ -189,7 +189,7 @@
 <style type="text/css">
     header.intro-header{
         position: relative;
-        background-image: url('/img/post-bg-css.jpg');
+        background-image: url('/img/post-bg-miui6.jpg');
         background: ;
     }
 
@@ -206,16 +206,14 @@
                 <div class="post-heading">
                     <div class="tags">
                         
-                        <a class="tag" href="/archive/?tag=Java" title="Java">Java</a>
+                        <a class="tag" href="/archive/?tag=%E7%AE%97%E6%B3%95" title="算法">算法</a>
                         
-                        <a class="tag" href="/archive/?tag=Shell" title="Shell">Shell</a>
-                        
-                        <a class="tag" href="/archive/?tag=%E5%AE%9E%E8%B7%B5" title="实践">实践</a>
+                        <a class="tag" href="/archive/?tag=%E4%BC%98%E5%8C%96" title="优化">优化</a>
                         
                     </div>
-                    <h1>Import * 真的比单项导入慢吗？</h1>
+                    <h1>最长回文子串的优化过程</h1>
                     
-                    <h2 class="subheading"> 动手测试到底慢多少 </h2>
+                    <h2 class="subheading">从 O(n^3) 到 O(n)</h2>
                     <span class="meta">Posted by Ubik on April 1, 2019</span>
                 </div>
             </div>
@@ -242,149 +240,84 @@
                 <!-- Multi-Lingual -->
                 
 
-				<p>在中间件考试的前一天，同学在群里 “问写 Corba 代码的时候能使用 import * 吗？”，老师说这样会把无关的类写入字节码，最好不要这样。
-因为当时已经学习过编译原理，顺便又在看《深入理解 Java Web 技术内幕》一书，于是对这个说法产生了很大的怀疑：Java 的编译器是如此不智能以至于 Bytecode 这种寸土寸金的地方都要因一句 <code class="highlighter-rouge">import *</code> 添加很多无关的字节吗？
-于是我开始了实验…</p>
-<h1 id="import--对-javac生成的字节码的影响">import * 对 Javac生成的字节码的影响</h1>
-<p>我们知道，在非静态导入的情况下，import 可以有 <code class="highlighter-rouge">import *</code> 和<code class="highlighter-rouge">import 具体类</code>两种形式，我们编写如下代码</p>
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-</pre></td><td class="rouge-code"><pre><span class="kn">import</span> <span class="nn">java.util.concurrent.*</span><span class="o">;</span>
+				<p>这里分享一道有趣的题目，笔者在 POJ 上使用多种不同的方法进行求解，这其中包括最基本的蛮力法、动态规划、分治算法+字符串哈希以及 Manacher 算法和后缀数组。</p>
+<h2 id="问题描述">问题描述</h2>
+<blockquote>
+  <p>聪明的计算机科学的学生安迪正在参加一个算法课，教授问学生一个简单的问题：“你能提出一个有效的算法来找出字符串中最大回文长度吗？”
+如果一个字符串向前和向后读相同，例如“madam”是回文，而“ACM”则不是回文，则称为回文。
+学生们认识到这是一个经典的问题，但无法给出一个比遍历所有子串和检查它们是否是回文的方法更好的解答，过了一会儿安迪举起手说：“好吧，我有一个更好的。”在他开始解释他的想法之前，他停了一会儿，然后说：“嗯，我有一个更好的算法！”.
+如果你认为你知道安迪的最终解决方案，那就证明它吧！给定一个最多1000000个字符的字符串，查找并打印字符串中最大回文长度。</p>
+</blockquote>
 
-<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Pre</span> <span class="o">{</span>
-    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
-        <span class="n">String</span> <span class="n">a</span> <span class="o">=</span> <span class="s">"abcd"</span><span class="o">;</span>
-        <span class="n">ConcurrentHashMap</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span><span class="n">String</span> <span class="o">&gt;</span> <span class="n">chm</span><span class="o">=</span><span class="k">new</span> <span class="n">ConcurrentHashMap</span><span class="o">();</span>
-        <span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="o">;</span><span class="n">i</span><span class="o">&lt;</span><span class="mi">100</span><span class="o">;</span><span class="n">i</span><span class="o">++)</span>
-            <span class="n">chm</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">String</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="n">i</span><span class="o">),</span><span class="n">String</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="n">i</span><span class="o">*</span><span class="n">i</span><span class="o">*</span><span class="n">i</span><span class="o">));</span>
+<h2 id="暴力法">暴力法</h2>
+<p>枚举字符串的每一个子串，判断其是否是回文串，如果是且比 <code class="highlighter-rouge">res.length()</code>，就更新 res 。枚举每个字串需要 O(n^2) 的时间复杂度，判断每一个子串是否为回文串需要 O(n) 的时间复杂度，因此，总的时间复杂度为 O(n^3). 思路非常简单，这里不再赘述,实现如下。</p>
+<pre><code class="language-Java">public String longestPalindrome(String s) {
+        if(s.isEmpty()){
+            return s;
+        }
+        String res=s.substring(0,1);
+        for (int i = 0; i &lt; s.length(); i++) {
+            for (int j = i + 1; j &lt;= s.length(); j++) {
+                String k=s.substring(i,j);
+                String rk=new StringBuffer(k).reverse().toString();
+                if(k.equals(rk)&amp;&amp;k.length()&gt;res.length()){
+                    res=k;
+                }
+            }
+        }
+        return res;
+    }
+</code></pre>
 
-        <span class="k">for</span> <span class="o">(</span><span class="n">String</span> <span class="nl">str:</span><span class="n">chm</span><span class="o">.</span><span class="na">keySet</span><span class="o">()</span>
-             <span class="o">)</span> <span class="o">{</span>
-            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">chm</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">str</span><span class="o">));</span>
-        <span class="o">}</span>
-        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">();</span>
-<span class="c1">//        pre(a,0,0);</span>
+<h2 id="动态规划法">动态规划法</h2>
+<p>因为之前解决过最长公共子串 LCS 的问题，于是很自然地想到，将题目所给字符串倒置，利用回文串正序读和逆序读结果一样的特性，对其求 LCS ，res 就是本题的答案。
+但在制作 case 的时候，笔者发现这是错误的解法，因为一旦原来的字符串中已经同时存在某个字串及其逆序，这个算法就无法找到最长的那一个。
+所以应该换如下思路：令 <code class="highlighter-rouge">dp[i][j]</code> 表示 <code class="highlighter-rouge">S[i]~S[j]</code> 所表示的子串是否是回文子串，是则为1，不是则为0，这样根据 <code class="highlighter-rouge">S[i]是否=S[j]</code> ，可以把转移情况分成两类</p>
 
-    <span class="o">}</span>
-<span class="o">}</span>
-</pre></td></tr></tbody></table></code></pre></div></div>
-<p>另一个版本唯一的不同是 第一行使用import java.util.concurrent.ConcurrentHashMap;
-然后利用 javac -verbose 命令生成字节码，再利用 javap 反编译，查看 .class 文件的不同。
-可以发现，除了类的名称以及因此引发的 MD5等文件名不同以外，常量池并无不同。因此可以证明：<code class="highlighter-rouge">import *</code> 对 Javac生成的字节码没有影响，或者说<strong><code class="highlighter-rouge">import *</code> 不会将多余的类写入字节码</strong>，那么，Java编译器对这种优化需要耗费多少时间呢？</p>
-<h2 id="时间测试">时间测试</h2>
-<p>实践出真知，我们用最基本的脚本在我的小型服务器上进行测试，Shell 脚本如下</p>
-<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-</pre></td><td class="rouge-code"><pre><span class="k">for </span>n <span class="k">in</span> <span class="o">{</span>1..50<span class="o">}</span><span class="p">;</span>
-    <span class="k">do </span>javac <span class="nt">-verbose</span> Pre.java <span class="o">&gt;&gt;</span> log1.dat 2&gt;&amp;1<span class="p">;</span> 
-<span class="k">done</span>
-<span class="c">#loop50次javac过程并输出时间（ms），1为按需导入，2为单项导入</span>
-<span class="k">for </span>n <span class="k">in</span> <span class="o">{</span>1..50<span class="o">}</span><span class="p">;</span>
-    <span class="k">do </span>javac <span class="nt">-verbose</span> Pre2.java <span class="o">&gt;&gt;</span> log2.dat 2&gt;&amp;1<span class="p">;</span>
-<span class="k">done</span>
-
-<span class="c">#重定向文件</span>
-<span class="nb">grep </span>total log1.dat&gt;&gt;time1.dat 2&gt;&amp;1
-<span class="nb">grep </span>total log2.dat&gt;&gt;time2.dat 2&gt;&amp;1
-
-<span class="c">#awk截取求和</span>
-<span class="nb">awk</span> <span class="nt">-F</span><span class="s2">"[ ms]"</span> <span class="s1">'{sum+= $2} END {print "import *= ", sum}'</span> time1.dat
-<span class="nb">awk</span> <span class="nt">-F</span><span class="s2">"[ ms]"</span> <span class="s1">'{sum+= $2} END {print "import concurrenthashmap= ", sum}'</span> time2.dat
-
-</pre></td></tr></tbody></table></code></pre></div></div>
-<p>之后 <code class="highlighter-rouge">nohup sh ./test.sh &amp;</code>测试，跑了多次，结果如下
-<img src="/img/D243310154EB89DCC999CB05B200D8E0.jpg" alt="插图" />
-可以看出，<code class="highlighter-rouge">import concurrenthashmap</code>确实是要比 <code class="highlighter-rouge">import *</code> 快的。那么，编译器究竟是在哪里进行了优化呢？</p>
-
-<h2 id="底层探究">底层探究</h2>
-<p>结合以前编译原理的知识，我猜测是在生成抽象语法树 AST 的时候进行了优化，那么具体是怎么做到的呢？
-值得注意的是，在上一步中 <code class="highlighter-rouge">javac -verbose Pre.java</code> ，（按需导入）时，静态加载只加载了 Object 和 String两个类，然后才是<strong>[正在检查Pre]</strong>，随后才加载ConcurrentHashMap，信息如下</p>
-<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-2
-3
-4
-5
-6
-</pre></td><td class="rouge-code"><pre><span class="o">[</span>正在加载ZipFileIndexFileObject[/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/lib/ct.sym<span class="o">(</span>META-INF/sym/rt.jar/java/lang/Object.class<span class="o">)]]</span>
-<span class="o">[</span>正在加载ZipFileIndexFileObject[/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/lib/ct.sym<span class="o">(</span>META-INF/sym/rt.jar/java/lang/String.class<span class="o">)]]</span>
-<span class="o">[</span>正在检查Pre]
-<span class="o">[</span>正在加载ZipFileIndexFileObject[/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/lib/ct.sym<span class="o">(</span>META-INF/sym/rt.jar/java/io/Serializable.class<span class="o">)]]</span>
-<span class="o">[</span>正在加载ZipFileIndexFileObject[/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/lib/ct.sym<span class="o">(</span>META-INF/sym/rt.jar/java/lang/AutoCloseable.class<span class="o">)]]</span>
-<span class="o">[</span>正在加载ZipFileIndexFileObject[/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/lib/ct.sym<span class="o">(</span>META-INF/sym/rt.jar/java/util/concurrent/ConcurrentHashMap.class<span class="o">)]]</span>
-</pre></td></tr></tbody></table></code></pre></div></div>
-<p>但在单项导入的文件中，ConcurrentHashMap是和 String、Object 一起加载的，代码如下</p>
-<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-2
-3
-4
-5
-6
-7
-</pre></td><td class="rouge-code"><pre><span class="o">[</span>正在加载ZipFileIndexFileObject[/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/lib/ct.sym<span class="o">(</span>META-INF/sym/rt.jar/java/util/concurrent/ConcurrentHashMap.class<span class="o">)]]</span>
-<span class="o">[</span>正在加载ZipFileIndexFileObject[/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/lib/ct.sym<span class="o">(</span>META-INF/sym/rt.jar/java/util/concurrent/ConcurrentLinkedDeque.class<span class="o">)]]</span>
-<span class="o">[</span>正在加载ZipFileIndexFileObject[/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/lib/ct.sym<span class="o">(</span>META-INF/sym/rt.jar/java/lang/Object.class<span class="o">)]]</span>
-<span class="o">[</span>正在加载ZipFileIndexFileObject[/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/lib/ct.sym<span class="o">(</span>META-INF/sym/rt.jar/java/lang/String.class<span class="o">)]]</span>
-<span class="o">[</span>正在检查Pre2]
-<span class="o">[</span>正在加载ZipFileIndexFileObject[/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/lib/ct.sym<span class="o">(</span>META-INF/sym/rt.jar/java/io/Serializable.class<span class="o">)]]</span>
-<span class="o">[</span>正在加载ZipFileIndexFileObject[/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/lib/ct.sym<span class="o">(</span>META-INF/sym/rt.jar/java/lang/AutoCloseable.class<span class="o">)]]</span>
-</pre></td></tr></tbody></table></code></pre></div></div>
-<p>从中可以看出，单项导入的时间要更早。
-基于此我们去找 javac 的源码，通过阅读源码，笔者了解到：在javac的语法分析解析出package语法后（显然 Java 代码的第一行是 Package），会通过importDeclaration()方法生产JCImport语法树，如果是 <code class="highlighter-rouge">import *</code>，那么树的叶子结点 JCFieldAccess 的 Token 名为 asterisk 并结束,这实际上是一个可替换的标识符。Javac 在<strong>语义分析</strong>时会按顺序在该类本身及其嵌套类、单类型导入、当前包找不到所需类后才去找按需导入并通过回溯那条 <code class="highlighter-rouge">import *</code>所指代的类的集合来寻找正确的类 替换AST，所以会额外增加编译时间。</p>
-
-<p>等等，这是不是有些熟悉？先预编译，然后动态替换。是的，SQL 注入的预防就是用的类似的方法。</p>
-<h2 id="工程实践">工程实践</h2>
 <ol>
-  <li>
-    <p>不使用的import会造成读代码人的困惑</p>
-  </li>
-  <li>可能造成名字空间的冲突，例如：<code class="highlighter-rouge">import a.*;</code> <code class="highlighter-rouge">import b.*;</code>
- 如果包a和b中包含相同的类名会造成冲突。显示的写出每个import的类能够及早的发现问题。如果b包完全没有用到，则会造成不必要的冲突。</li>
-  <li>无用的import可能引入更多的无用的类库，在项目规模比较大的时候，对编译器可能会造成压力</li>
-  <li>无名包问题：如果在编译单元的顶部没有包声明，Java编译器首选会从无名包中搜索一个类型，然后才是按需类型声明。如果有命名冲突就会产生问题。</li>
+  <li><code class="highlighter-rouge">S[i]==S[j]</code> ,那么只要 <code class="highlighter-rouge">S[i+1]～S[j-1]</code> 是回文子串，那么 <code class="highlighter-rouge">S[i]~S[j]</code> 就是回文子串，如果 <code class="highlighter-rouge">S[i+1]～S[j-1]</code> 不是回文子串，那么 <code class="highlighter-rouge">S[i]~S[j]</code> 就不是回文子串。</li>
+  <li><code class="highlighter-rouge">S[i]!=S[j]</code> ，那么 <code class="highlighter-rouge">S[i]~S[j]</code> 就不是回文子串。</li>
 </ol>
 
-<h2 id="总结">总结</h2>
-<p>笔者借由一个简单的问题，通过读源码和实践的方式，探究了 <code class="highlighter-rouge">import *</code> 按需导入是否比 单项导入慢？慢多少？为什么慢？并由此联想和引出了预防 SQL 注入的基本原理，最后结合全文以及 Java 语言规范和 JDK 源码，给出了工程上关于 import 的最佳实践</p>
+<p>由此可得状态转移方程</p>
+<pre><code class="language-Java">dp[i][j]=S[i]==S[j]? dp[i+1][j-1]:0;
+</code></pre>
+<p>但还有一个问题，对于该状态转移方程，如果按照 i 和 j 从小到大的顺序来枚举子串的两个端点，然后更新 <code class="highlighter-rouge">dp[i][j]</code> ，会无法保证 <code class="highlighter-rouge">dp[i+1][j-1]</code> 已经被计算过，出现空指针异常。注意到回文子串的对称性，通过手动计算 dp 二维数组，发现可通过枚举子串长度的方式进行第一轮遍历，第二遍按照子串的初始位置进行遍历，如此，即可获得正确的dp数组。
+时间复杂度方面，先枚举子串的长度再枚举作第一轮循环，再枚举子串的起始端点作为第二轮循环，因此时间复杂度为 O(n^2),比最基本的蛮力法要好多了。关键代码如下所示（笔者大二上提交 OJ 的 C++ 代码）</p>
+<pre><code class="language-C++">for (int L = 3; L &lt;= len; L++)//枚举子串的长度作为一轮遍历的方法
+{
+    for (int i = 0; i + L - 1 &lt; len; i++)//枚举子串的起始端点作为第二轮循环
+    {
+        int j = i + L - 1;//子串的右端点
+        if (S[i] == S[j] &amp;&amp; dp[i + 1][j - 1] == 1) {
+            dp[i][j] = 1;
+            ans = L;//更新最长回文子串长度
+        }
+    }
+</code></pre>
+<p>对于该二重循环，显然其时间复杂度为 O(n^2)。</p>
+<h2 id="字符串-hash--二分">字符串 Hash &amp; 二分</h2>
+
+<h2 id="manacher-算法">Manacher 算法</h2>
+
+<p>##</p>
 
 
                 <hr style="visibility: hidden;">
                 <ul class="pager">
                     
+                    <li class="previous">
+                        <a href="/2019/04/01/Java-%E4%B8%AD-%E6%8C%89%E9%9C%80%E5%AF%BC%E6%AF%94%E5%8D%95%E7%B1%BB%E5%9E%8B%E5%AF%BC%E5%85%A5%E6%85%A2%E5%A4%9A%E5%B0%91/" data-toggle="tooltip" data-placement="top" title="Import * 真的比单项导入慢吗？">
+                        Previous<br>
+                        <span>Import * 真的比单项导入慢吗？</span>
+                        </a>
+                    </li>
+                    
                     
                     <li class="next">
-                        <a href="/2019/04/01/%E6%9C%80%E9%95%BF%E5%9B%9E%E6%96%87%E5%AD%90%E4%B8%B2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/" data-toggle="tooltip" data-placement="top" title="最长回文子串的优化过程">
+                        <a href="/2019/04/29/Myblog-Springboot-Summary/" data-toggle="tooltip" data-placement="top" title="基于SpringBoot的MyBlog项目总结">
                         Next<br>
-                        <span>最长回文子串的优化过程</span>
+                        <span>基于SpringBoot的MyBlog项目总结</span>
                         </a>
                     </li>
                     
@@ -478,8 +411,8 @@
 <script type="text/javascript">
     /* * * CONFIGURATION VARIABLES * * */
     var disqus_shortname = "ubiqueadam";
-    var disqus_identifier = "/2019/04/01/Java 中 按需导比单类型导入慢多少？";
-    var disqus_url = "http://localhost:4000/2019/04/01/Java-%E4%B8%AD-%E6%8C%89%E9%9C%80%E5%AF%BC%E6%AF%94%E5%8D%95%E7%B1%BB%E5%9E%8B%E5%AF%BC%E5%85%A5%E6%85%A2%E5%A4%9A%E5%B0%91/";
+    var disqus_identifier = "/2019/04/01/最长回文子串的优化过程";
+    var disqus_url = "http://localhost:4000/2019/04/01/%E6%9C%80%E9%95%BF%E5%9B%9E%E6%96%87%E5%AD%90%E4%B8%B2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/";
 
     (function() {
         var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
