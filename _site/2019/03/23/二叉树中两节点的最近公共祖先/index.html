@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="description" content="关于技术与生活，探索与分享 | 丁彪，Programmer,Software Engineer,amateur writer | 这里是 @Ubik丁彪 的个人博客，与你一起发现更大的世界。">
+    <meta name="keywords"  content="丁彪, Ubik丁彪, Ubik, AdamUbik, 丁彪的博客, Ubik Blog, 博客, 个人网站, 互联网, Web, 后端, 架构 ">
+    <meta name="theme-color" content="#000000">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="二叉树中两节点的最近公共祖先问题 - 丁彪的博客 | Ubik Blog">
+    
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="要求
+
+对于如上所示二叉树，节点8和5的最近公共祖先是2，节点9和6的最近公共祖先是1.
+思路
+对于二叉树问题，一个基本的思路就是遍历，在遍历过程中加入一些操作，本题采用后序遍历。假设遍历左子树的返回结果为 left，右子树的返回结果为 right，当前节点为 cur。
+
+  若 cur=null/o1/o2，返回cur
+  若 left 和right 都为空，说明整个 cur 为 root...">
+    
+    <meta property="article:published_time" content="2019-03-23T20:31:14Z">
+    
+    
+    <meta property="article:author" content="Ubik">
+    
+    
+    <meta property="article:tag" content="算法">
+    
+    <meta property="article:tag" content="二叉树">
+    
+    
+    <meta property="og:image" content="http://localhost:4000/img/avatar-ubik-ny.png">
+    <meta property="og:url" content="http://localhost:4000/2019/03/23/%E4%BA%8C%E5%8F%89%E6%A0%91%E4%B8%AD%E4%B8%A4%E8%8A%82%E7%82%B9%E7%9A%84%E6%9C%80%E8%BF%91%E5%85%AC%E5%85%B1%E7%A5%96%E5%85%88/">
+    <meta property="og:site_name" content="丁彪的博客 | Ubik Blog">
+    
+    <title>二叉树中两节点的最近公共祖先问题 - 丁彪的博客 | Ubik Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="http://localhost:4000/2019/03/23/%E4%BA%8C%E5%8F%89%E6%A0%91%E4%B8%AD%E4%B8%A4%E8%8A%82%E7%82%B9%E7%9A%84%E6%9C%80%E8%BF%91%E5%85%AC%E5%85%B1%E7%A5%96%E5%85%88/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/hux-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Ubik Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    
+                    
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    
+                    
+                    <li>
+                        <a href="/archive/">Archive</a>
+                    </li>
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Image to hack wechat -->
+<!-- <img src="/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="/img/post-bg-web.jpg" width="0" height="0"> -->
+
+<!-- Post Header -->
+
+
+
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/post-bg-web.jpg');
+        background: ;
+    }
+
+    
+</style>
+
+<header class="intro-header" >
+
+    <div class="header-mask"></div>
+    
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/archive/?tag=%E7%AE%97%E6%B3%95" title="算法">算法</a>
+                        
+                        <a class="tag" href="/archive/?tag=%E4%BA%8C%E5%8F%89%E6%A0%91" title="二叉树">二叉树</a>
+                        
+                    </div>
+                    <h1>二叉树中两节点的最近公共祖先问题</h1>
+                    
+                    <h2 class="subheading">后序遍历、记忆搜索与 Tarjan</h2>
+                    <span class="meta">Posted by Ubik on March 23, 2019</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+
+
+
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+				<h1 id="要求">要求</h1>
+<p><img src="/img/in-post/2FCCB94DABAE923A3EF900C3150E88E1.jpg" alt="插图" />
+对于如上所示二叉树，节点8和5的最近公共祖先是2，节点9和6的最近公共祖先是1.</p>
+<h2 id="思路">思路</h2>
+<p>对于二叉树问题，一个基本的思路就是遍历，在遍历过程中加入一些操作，本题采用后序遍历。假设遍历左子树的返回结果为 left，右子树的返回结果为 right，当前节点为 cur。</p>
+<ol>
+  <li>若 cur=null/o1/o2，返回cur</li>
+  <li>若 left 和right 都为空，说明整个 cur 为 root 的子树都未发现过o1或者o2，返回 null。</li>
+  <li>若 left 和 right 都不为空，说明左右子树上都发现过 o1/o2，则 cur 就是其首次相遇地点，返回 cur</li>
+  <li>若left 和right 一个为空一个不为空，假设不为空的那个记为 node，此时node 要么是 o1，o2中的一个，要么node 已经是o1、o2的最近公共祖先，直接返回node即可。</li>
+</ol>
+
+<h2 id="举例">举例</h2>
+<p>以上图中两目的节点为8和5来说明</p>
+<ul>
+  <li>
+    <p>后序遍历结果为8，9，4，此时满足上述条件4，返回8</p>
+  </li>
+  <li>8，9，4，5，2，此时两个都不为空，满足条件3，首次在2相遇，返回2</li>
+  <li>8，9，4，5，2，6，7，3，此时一个为空一个不为空，满足条件4，返回2</li>
+  <li>最后遍历1，此时左子树返回2，右子树返回null，故最终返回2</li>
+</ul>
+
+<h2 id="实现">实现</h2>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+</pre></td><td class="rouge-code"><pre><span class="kd">public</span> <span class="kd">static</span> <span class="n">Node</span> <span class="nf">lowestAncestor</span><span class="o">(</span><span class="n">Node</span> <span class="n">head</span><span class="o">,</span> <span class="n">Node</span> <span class="n">o1</span><span class="o">,</span> <span class="n">Node</span> <span class="n">o2</span><span class="o">)</span> <span class="o">{</span>
+		<span class="k">if</span> <span class="o">(</span><span class="n">head</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="n">head</span> <span class="o">==</span> <span class="n">o1</span> <span class="o">||</span> <span class="n">head</span> <span class="o">==</span> <span class="n">o2</span><span class="o">)</span> <span class="o">{</span>
+			<span class="k">return</span> <span class="n">head</span><span class="o">;</span>
+		<span class="o">}</span>
+		<span class="n">Node</span> <span class="n">left</span> <span class="o">=</span> <span class="n">lowestAncestor</span><span class="o">(</span><span class="n">head</span><span class="o">.</span><span class="na">left</span><span class="o">,</span> <span class="n">o1</span><span class="o">,</span> <span class="n">o2</span><span class="o">);</span>
+		<span class="n">Node</span> <span class="n">right</span> <span class="o">=</span> <span class="n">lowestAncestor</span><span class="o">(</span><span class="n">head</span><span class="o">.</span><span class="na">right</span><span class="o">,</span> <span class="n">o1</span><span class="o">,</span> <span class="n">o2</span><span class="o">);</span>
+		<span class="k">if</span> <span class="o">(</span><span class="n">left</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">right</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+			<span class="k">return</span> <span class="n">head</span><span class="o">;</span>
+		<span class="o">}</span>
+		<span class="k">return</span> <span class="n">left</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">?</span> <span class="n">left</span> <span class="o">:</span> <span class="n">right</span><span class="o">;</span>
+	<span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<h1 id="进阶">进阶</h1>
+<p>如果查询次数很多，如何降低单次查询时间？</p>
+<h2 id="思路-1">思路</h2>
+<p>空间换时间即可，比如将任意两个节点作为o1,o2的答案缓存在哈希表中，查询时直接给出 key 得到 value。</p>
+<ol>
+  <li>
+    <p>对二叉树中每一个子树都做步骤2</p>
+  </li>
+  <li>
+    <p>假设子树的头节点为h，h所有后代节点和h节点的最近公共祖先都是h；h左子树的每个节点和h右子树的每个节点的最近公共祖先都是h。</p>
+  </li>
+</ol>
+
+<h2 id="实现-1">实现</h2>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+</pre></td><td class="rouge-code"><pre><span class="kd">public</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">Record</span> <span class="o">{</span>
+		<span class="kd">private</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">,</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">,</span> <span class="n">Node</span><span class="o">&gt;&gt;</span> <span class="n">map</span><span class="o">;</span>
+
+		<span class="kd">public</span> <span class="nf">Record</span><span class="o">(</span><span class="n">Node</span> <span class="n">head</span><span class="o">)</span> <span class="o">{</span>
+			<span class="n">map</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">,</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">,</span> <span class="n">Node</span><span class="o">&gt;&gt;();</span>
+			<span class="n">initMap</span><span class="o">(</span><span class="n">head</span><span class="o">);</span>
+			<span class="n">setMap</span><span class="o">(</span><span class="n">head</span><span class="o">);</span>
+		<span class="o">}</span>
+
+		<span class="kd">private</span> <span class="kt">void</span> <span class="nf">initMap</span><span class="o">(</span><span class="n">Node</span> <span class="n">head</span><span class="o">)</span> <span class="o">{</span>
+			<span class="k">if</span> <span class="o">(</span><span class="n">head</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+				<span class="k">return</span><span class="o">;</span>
+			<span class="o">}</span>
+			<span class="n">map</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">head</span><span class="o">,</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">,</span> <span class="n">Node</span><span class="o">&gt;());</span>
+			<span class="n">initMap</span><span class="o">(</span><span class="n">head</span><span class="o">.</span><span class="na">left</span><span class="o">);</span>
+			<span class="n">initMap</span><span class="o">(</span><span class="n">head</span><span class="o">.</span><span class="na">right</span><span class="o">);</span>
+		<span class="o">}</span>
+
+		<span class="kd">private</span> <span class="kt">void</span> <span class="nf">setMap</span><span class="o">(</span><span class="n">Node</span> <span class="n">head</span><span class="o">)</span> <span class="o">{</span>
+			<span class="k">if</span> <span class="o">(</span><span class="n">head</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+				<span class="k">return</span><span class="o">;</span>
+			<span class="o">}</span>
+			<span class="n">headRecord</span><span class="o">(</span><span class="n">head</span><span class="o">.</span><span class="na">left</span><span class="o">,</span> <span class="n">head</span><span class="o">);</span>
+			<span class="n">headRecord</span><span class="o">(</span><span class="n">head</span><span class="o">.</span><span class="na">right</span><span class="o">,</span> <span class="n">head</span><span class="o">);</span>
+			<span class="n">subRecord</span><span class="o">(</span><span class="n">head</span><span class="o">);</span>
+			<span class="n">setMap</span><span class="o">(</span><span class="n">head</span><span class="o">.</span><span class="na">left</span><span class="o">);</span>
+			<span class="n">setMap</span><span class="o">(</span><span class="n">head</span><span class="o">.</span><span class="na">right</span><span class="o">);</span>
+		<span class="o">}</span>
+
+		<span class="kd">private</span> <span class="kt">void</span> <span class="nf">headRecord</span><span class="o">(</span><span class="n">Node</span> <span class="n">n</span><span class="o">,</span> <span class="n">Node</span> <span class="n">h</span><span class="o">)</span> <span class="o">{</span>
+			<span class="k">if</span> <span class="o">(</span><span class="n">n</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+				<span class="k">return</span><span class="o">;</span>
+			<span class="o">}</span>
+			<span class="n">map</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">n</span><span class="o">).</span><span class="na">put</span><span class="o">(</span><span class="n">h</span><span class="o">,</span> <span class="n">h</span><span class="o">);</span>
+			<span class="n">headRecord</span><span class="o">(</span><span class="n">n</span><span class="o">.</span><span class="na">left</span><span class="o">,</span> <span class="n">h</span><span class="o">);</span>
+			<span class="n">headRecord</span><span class="o">(</span><span class="n">n</span><span class="o">.</span><span class="na">right</span><span class="o">,</span> <span class="n">h</span><span class="o">);</span>
+		<span class="o">}</span>
+
+		<span class="kd">private</span> <span class="kt">void</span> <span class="nf">subRecord</span><span class="o">(</span><span class="n">Node</span> <span class="n">head</span><span class="o">)</span> <span class="o">{</span>
+			<span class="k">if</span> <span class="o">(</span><span class="n">head</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+				<span class="k">return</span><span class="o">;</span>
+			<span class="o">}</span>
+			<span class="n">preLeft</span><span class="o">(</span><span class="n">head</span><span class="o">.</span><span class="na">left</span><span class="o">,</span> <span class="n">head</span><span class="o">.</span><span class="na">right</span><span class="o">,</span> <span class="n">head</span><span class="o">);</span>
+			<span class="n">subRecord</span><span class="o">(</span><span class="n">head</span><span class="o">.</span><span class="na">left</span><span class="o">);</span>
+			<span class="n">subRecord</span><span class="o">(</span><span class="n">head</span><span class="o">.</span><span class="na">right</span><span class="o">);</span>
+		<span class="o">}</span>
+
+		<span class="kd">private</span> <span class="kt">void</span> <span class="nf">preLeft</span><span class="o">(</span><span class="n">Node</span> <span class="n">l</span><span class="o">,</span> <span class="n">Node</span> <span class="n">r</span><span class="o">,</span> <span class="n">Node</span> <span class="n">h</span><span class="o">)</span> <span class="o">{</span>
+			<span class="k">if</span> <span class="o">(</span><span class="n">l</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+				<span class="k">return</span><span class="o">;</span>
+			<span class="o">}</span>
+			<span class="n">preRight</span><span class="o">(</span><span class="n">l</span><span class="o">,</span> <span class="n">r</span><span class="o">,</span> <span class="n">h</span><span class="o">);</span>
+			<span class="n">preLeft</span><span class="o">(</span><span class="n">l</span><span class="o">.</span><span class="na">left</span><span class="o">,</span> <span class="n">r</span><span class="o">,</span> <span class="n">h</span><span class="o">);</span>
+			<span class="n">preLeft</span><span class="o">(</span><span class="n">l</span><span class="o">.</span><span class="na">right</span><span class="o">,</span> <span class="n">r</span><span class="o">,</span> <span class="n">h</span><span class="o">);</span>
+		<span class="o">}</span>
+
+		<span class="kd">private</span> <span class="kt">void</span> <span class="nf">preRight</span><span class="o">(</span><span class="n">Node</span> <span class="n">l</span><span class="o">,</span> <span class="n">Node</span> <span class="n">r</span><span class="o">,</span> <span class="n">Node</span> <span class="n">h</span><span class="o">)</span> <span class="o">{</span>
+			<span class="k">if</span> <span class="o">(</span><span class="n">r</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+				<span class="k">return</span><span class="o">;</span>
+			<span class="o">}</span>
+			<span class="n">map</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">l</span><span class="o">).</span><span class="na">put</span><span class="o">(</span><span class="n">r</span><span class="o">,</span> <span class="n">h</span><span class="o">);</span>
+			<span class="n">preRight</span><span class="o">(</span><span class="n">l</span><span class="o">,</span> <span class="n">r</span><span class="o">.</span><span class="na">left</span><span class="o">,</span> <span class="n">h</span><span class="o">);</span>
+			<span class="n">preRight</span><span class="o">(</span><span class="n">l</span><span class="o">,</span> <span class="n">r</span><span class="o">.</span><span class="na">right</span><span class="o">,</span> <span class="n">h</span><span class="o">);</span>
+		<span class="o">}</span>
+
+		<span class="kd">public</span> <span class="n">Node</span> <span class="nf">query</span><span class="o">(</span><span class="n">Node</span> <span class="n">o1</span><span class="o">,</span> <span class="n">Node</span> <span class="n">o2</span><span class="o">)</span> <span class="o">{</span>
+			<span class="k">if</span> <span class="o">(</span><span class="n">o1</span> <span class="o">==</span> <span class="n">o2</span><span class="o">)</span> <span class="o">{</span>
+				<span class="k">return</span> <span class="n">o1</span><span class="o">;</span>
+			<span class="o">}</span>
+			<span class="k">if</span> <span class="o">(</span><span class="n">map</span><span class="o">.</span><span class="na">containsKey</span><span class="o">(</span><span class="n">o1</span><span class="o">))</span> <span class="o">{</span>
+				<span class="k">return</span> <span class="n">map</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">o1</span><span class="o">).</span><span class="na">get</span><span class="o">(</span><span class="n">o2</span><span class="o">);</span>
+			<span class="o">}</span>
+			<span class="k">if</span> <span class="o">(</span><span class="n">map</span><span class="o">.</span><span class="na">containsKey</span><span class="o">(</span><span class="n">o2</span><span class="o">))</span> <span class="o">{</span>
+				<span class="k">return</span> <span class="n">map</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">o2</span><span class="o">).</span><span class="na">get</span><span class="o">(</span><span class="n">o1</span><span class="o">);</span>
+			<span class="o">}</span>
+			<span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+		<span class="o">}</span>
+
+	<span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>若二叉树节点数为N，枚举任意两个节点并记录其信息需要O(n^2)的时间复杂度，哈希表中数据查询的时间复杂度为常数级别。</p>
+
+<h1 id="再进阶">再进阶</h1>
+<p>对节点数为N的二叉树，批量查询M次，要求时间复杂度达到O(M+N).
+首先，存在一些可以直接返回的结果。
+对于M次查询的每次o1，o2输入，以下三种情况直接返回：</p>
+<ol>
+  <li>
+    <p>o1==o2，返回o1</p>
+  </li>
+  <li>o1,o2有且只有1个为null，返回非null的那一个</li>
+  <li>o1和o2都为null，返回null</li>
+</ol>
+
+<p>对于不能直接返回的结果，可以使用 tarjan 算法+并查集。</p>
+
+<p>首先读入所有的询问关系(u,v)(即要求LCA的树节点对u,v)保存在某种数据结构里，然后初始化并查集，每个树节点自成一个单元素集合，最后将每一个树节点的visited标志位置为false(表示该节点尚未访问)。</p>
+
+<p>接着对树进行后根次序遍历,每当对以一个树节点u的每一个子女节点v为根的子树后根遍历完成后，将并查集中以该子女节点v为根的集合(该集合包含了以该子女节点v为根的子树中的所有节点)并入并查集中以u为根的集合中(并入前该集合包含了u和以v之前所有子女节点为根的子树中的所有节点)当后根遍历完以u的所有子女节点v为根的子树并回溯至u本身后,将u的visited置true(表示已访问)。</p>
+
+<p>然后，查找包含u的询问关系(u,i)或(i,u)，如果没有这样的询问关系，什么都不做进行最后一步，如果有这样的询问关系(u,i)或(i,u),检查i的visited标志位,如果该标志位为false，什么也不做,进行最后一步,如果为true,查找并查集中i所在集合的根节点L,L即为u和i的LCA。最后一步,如果u有父节点k，将以u为根的集合并入以k为根的集合中。接着继续后根遍历u的后继结点当整棵树后根遍历完成后，所有询问关系的LCA就全部求出了</p>
+
+<p>不过一般我都直接后序遍历二叉树求解，这个难度过大，现写很容易挂。</p>
+
+<h1 id="参考资料">参考资料</h1>
+<p><a href="https://www.zhihu.com/question/68753603/answer/608919866">知乎-如何理解 Tarjan 的 LCA 算法？</a></p>
+
+
+                <hr style="visibility: hidden;">
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2019/03/22/Trie/" data-toggle="tooltip" data-placement="top" title="Trie树的构造与性质">
+                        Previous<br>
+                        <span>Trie树的构造与性质</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2019/04/01/Java-%E4%B8%AD-%E6%8C%89%E9%9C%80%E5%AF%BC%E6%AF%94%E5%8D%95%E7%B1%BB%E5%9E%8B%E5%AF%BC%E5%85%A5%E6%85%A2%E5%A4%9A%E5%B0%91/" data-toggle="tooltip" data-placement="top" title="Import * 真的比单项导入慢吗？">
+                        Next<br>
+                        <span>Import * 真的比单项导入慢吗？</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+                <hr style="visibility: hidden;">
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                    
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+
+
+<section>
+    
+        <hr class="hidden-sm hidden-xs">
+    
+    <h5><a href="/archive/">FEATURED TAGS</a></h5>
+    <div class="tags">
+        
+        
+        
+        </a>
+        
+        
+                <a data-sort="0004" 
+                    href="/archive/?tag=%E7%AE%97%E6%B3%95"
+                    title="算法"
+                    rel="3">算法</a>
+        
+                <a data-sort="0004" 
+                    href="/archive/?tag=Summary"
+                    title="Summary"
+                    rel="3">Summary</a>
+        
+                <a data-sort="0005" 
+                    href="/archive/?tag=%E5%AE%9E%E8%B7%B5"
+                    title="实践"
+                    rel="2">实践</a>
+        
+                <a data-sort="0005" 
+                    href="/archive/?tag=Clean+Code"
+                    title="Clean Code"
+                    rel="2">Clean Code
+    </div>
+</section>
+
+
+                <!-- Friends Blog -->
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+<!-- add support for mathjax by voleking-->
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "ubiqueadam";
+    var disqus_identifier = "/2019/03/23/二叉树中两节点的最近公共祖先";
+    var disqus_url = "http://localhost:4000/2019/03/23/%E4%BA%8C%E5%8F%89%E6%A0%91%E4%B8%AD%E4%B8%A4%E8%8A%82%E7%82%B9%E7%9A%84%E6%9C%80%E8%BF%91%E5%85%AC%E5%85%B1%E7%A5%96%E5%85%88/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <!-- SNS Link -->
+                
+
+
+<ul class="list-inline text-center">
+
+
+  
+  
+  
+  
+  
+  
+  <li>
+    <a target="_blank" href="https://github.com/ubique0305">
+      <span class="fa-stack fa-lg">
+        <i class="fa fa-circle fa-stack-2x"></i>
+        <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+      </span>
+    </a>
+  </li>
+  
+  
+</ul>
+
+                <p class="copyright text-muted">
+                    Copyright &copy; Ubik Blog 2019
+                    <br>
+                    Powered by <a href="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true">Hux Blog</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/hux-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+
+
+
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-139441319-1';
+    var _gaDomain = 'ubique0305.github.io';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+<!-- Baidu Tongji -->
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if ('' == 'true') {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

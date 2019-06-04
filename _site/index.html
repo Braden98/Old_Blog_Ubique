@@ -361,6 +361,65 @@
 </div>
 <hr>
 
+<div class="post-preview">
+    <a href="/2019/03/23/%E4%BA%8C%E5%8F%89%E6%A0%91%E4%B8%AD%E4%B8%A4%E8%8A%82%E7%82%B9%E7%9A%84%E6%9C%80%E8%BF%91%E5%85%AC%E5%85%B1%E7%A5%96%E5%85%88/">
+        <h2 class="post-title">
+            二叉树中两节点的最近公共祖先问题
+        </h2>
+        
+        <h3 class="post-subtitle">
+            后序遍历、记忆搜索与 Tarjan
+        </h3>
+        
+        <div class="post-content-preview">
+            
+                要求
+
+对于如上所示二叉树，节点8和5的最近公共祖先是2，节点9和6的最近公共祖先是1.
+思路
+对于二叉树问题，一个基本的思路就是遍历，在遍历过程中加入一些操作，本题采用后序遍历。假设遍历左子树的返回结果为 left，右子树的返回结果为 right，当前节点为 cur。
+
+  若 cur=null/o1/o2，返回cur
+  若 left 和right 都为空，说明整个 cur 为 root...
+            
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Ubik on March 23, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/03/22/Trie/">
+        <h2 class="post-title">
+            Trie树的构造与性质
+        </h2>
+        
+        <h3 class="post-subtitle">
+            一种较为通用的解决字符串问题的数据结构
+        </h3>
+        
+        <div class="post-content-preview">
+            
+                定义
+字典树是一种树形解构，利用字符串的公共前缀来节约存储空间，一个保存了8个键的trie结构，”A”, “to”, “tea”, “ted”, “ten”, “i”, “in”, and “inn”如图所示
+
+性质
+字典树基本性质如下
+
+  根节点没有路径字符，其余每一个节点都被一个字符路径找到
+  从根节点到某一节点，将路径上经过的字符连起来为对应字符串
+  每个节点引出的所有字符路径上...
+            
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Ubik on March 22, 2019
+    </p>
+</div>
+<hr>
+
 
 <!-- Pager -->
 
@@ -388,17 +447,22 @@
         </a>
         
         
-                <a data-sort="0003" 
-                    href="/archive/?tag=%E5%AE%9E%E8%B7%B5"
-                    title="实践"
-                    rel="2">实践</a>
+                <a data-sort="0004" 
+                    href="/archive/?tag=%E7%AE%97%E6%B3%95"
+                    title="算法"
+                    rel="3">算法</a>
         
-                <a data-sort="0002" 
+                <a data-sort="0004" 
                     href="/archive/?tag=Summary"
                     title="Summary"
                     rel="3">Summary</a>
         
-                <a data-sort="0003" 
+                <a data-sort="0005" 
+                    href="/archive/?tag=%E5%AE%9E%E8%B7%B5"
+                    title="实践"
+                    rel="2">实践</a>
+        
+                <a data-sort="0005" 
                     href="/archive/?tag=Clean+Code"
                     title="Clean Code"
                     rel="2">Clean Code
@@ -426,15 +490,6 @@
 
   
   
-  
-  <li>
-    <a target="_blank" href="https://www.zhihu.com/people/ubique-10">
-      <span class="fa-stack fa-lg">
-        <i class="fa fa-circle fa-stack-2x"></i>
-        <i class="fa  fa-stack-1x fa-inverse">知</i>
-      </span>
-    </a>
-  </li>
   
   
   
@@ -476,15 +531,6 @@
 
   
   
-  
-  <li>
-    <a target="_blank" href="https://www.zhihu.com/people/ubique-10">
-      <span class="fa-stack fa-lg">
-        <i class="fa fa-circle fa-stack-2x"></i>
-        <i class="fa  fa-stack-1x fa-inverse">知</i>
-      </span>
-    </a>
-  </li>
   
   
   

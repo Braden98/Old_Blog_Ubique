@@ -251,7 +251,7 @@
 
 <h2 id="暴力法">暴力法</h2>
 <p>枚举字符串的每一个子串，判断其是否是回文串，如果是且比 <code class="highlighter-rouge">res.length()</code>，就更新 res 。枚举每个字串需要 O(n^2) 的时间复杂度，判断每一个子串是否为回文串需要 O(n) 的时间复杂度，因此，总的时间复杂度为 O(n^3). 思路非常简单，这里不再赘述,实现如下。</p>
-<pre><code class="language-Java">public String longestPalindrome(String s) {
+<pre><code class="language-Java">public int longestPalindrome(String s) {
         if(s.isEmpty()){
             return s;
         }
@@ -265,14 +265,14 @@
                 }
             }
         }
-        return res;
+        return res.length();
     }
 </code></pre>
 
 <h2 id="动态规划法">动态规划法</h2>
-<p>因为之前解决过最长公共子串 LCS 的问题，于是很自然地想到，将题目所给字符串倒置，利用回文串正序读和逆序读结果一样的特性，对其求 LCS ，res 就是本题的答案。
-但在制作 case 的时候，笔者发现这是错误的解法，因为一旦原来的字符串中已经同时存在某个字串及其逆序，这个算法就无法找到最长的那一个。
-所以应该换如下思路：令 <code class="highlighter-rouge">dp[i][j]</code> 表示 <code class="highlighter-rouge">S[i]~S[j]</code> 所表示的子串是否是回文子串，是则为1，不是则为0，这样根据 <code class="highlighter-rouge">S[i]是否=S[j]</code> ，可以把转移情况分成两类</p>
+<p>因为之前解决过最长公共子串 LCS 的问题，于是很自然地想到，将题目所给字符串倒置，利用回文串正序读和逆序读结果一样的特性，对其求 LCS ，res 就是本题的答案。但在制作 case 的时候，笔者发现这是错误的解法，因为一旦原来的字符串中已经同时存在某个字串及其逆序，这个算法就无法找到最长的那一个。比如abcdefcba，输出的是错误结果 abc。</p>
+
+<p>所以应该换如下思路：令 <code class="highlighter-rouge">dp[i][j]</code> 表示 <code class="highlighter-rouge">S[i]~S[j]</code> 所表示的子串是否是回文子串，是则为1，不是则为0，这样根据 <code class="highlighter-rouge">S[i]是否=S[j]</code> ，可以把转移情况分成两类</p>
 
 <ol>
   <li><code class="highlighter-rouge">S[i]==S[j]</code> ,那么只要 <code class="highlighter-rouge">S[i+1]～S[j-1]</code> 是回文子串，那么 <code class="highlighter-rouge">S[i]~S[j]</code> 就是回文子串，如果 <code class="highlighter-rouge">S[i+1]～S[j-1]</code> 不是回文子串，那么 <code class="highlighter-rouge">S[i]~S[j]</code> 就不是回文子串。</li>
@@ -296,11 +296,225 @@
     }
 </code></pre>
 <p>对于该二重循环，显然其时间复杂度为 O(n^2)。</p>
+<h2 id="中心扩展法">中心扩展法</h2>
+<p>从上述动态规划算法中注意到回文子串的中心对称性，可以从字符串的中心开始，向两边分别扩散来检查回文，且对每一个字符都如此操作。每个中心的检查需要线性时间复杂度，遍历整个字符串也是如此，因此总的复杂度为O(n^2)。注意需要分 aba 和 abba 两种情况讨论</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+</pre></td><td class="rouge-code"><pre><span class="err">​</span>    <span class="kd">public</span> <span class="n">String</span> <span class="nf">longestPalindrome</span><span class="o">(</span><span class="n">String</span> <span class="n">s</span><span class="o">)</span> <span class="o">{</span>
+<span class="err">​</span>            <span class="k">if</span> <span class="o">(</span><span class="n">s</span><span class="o">.</span><span class="na">length</span><span class="o">()</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="o">)</span> <span class="o">{</span> 
+<span class="err">​</span>               <span class="k">return</span> <span class="n">s</span><span class="o">;</span>
+        <span class="o">}</span>
+        <span class="kt">int</span> <span class="n">maxLength</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+        <span class="kt">int</span> <span class="n">center</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">s</span><span class="o">.</span><span class="na">length</span><span class="o">();</span> <span class="n">i</span><span class="o">++){</span>
+            <span class="kt">int</span> <span class="n">begin</span> <span class="o">=</span> <span class="n">centerExpand</span><span class="o">(</span><span class="n">s</span><span class="o">,</span> <span class="n">i</span><span class="o">,</span> <span class="n">i</span><span class="o">);</span>                     
+            <span class="kt">int</span>  <span class="n">end</span> <span class="o">=</span> <span class="n">centerExpand</span><span class="o">(</span><span class="n">s</span><span class="o">,</span> <span class="n">i</span><span class="o">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="o">);</span>    
+            <span class="k">if</span> <span class="o">(</span><span class="n">maxLength</span> <span class="o">&lt;</span> <span class="n">Math</span><span class="o">.</span><span class="na">max</span><span class="o">(</span><span class="n">begin</span><span class="o">,</span> <span class="n">end</span><span class="o">)){</span>
+                <span class="n">center</span> <span class="o">=</span> <span class="n">i</span><span class="o">;</span>                                                 
+                <span class="n">maxLength</span> <span class="o">=</span> <span class="n">Math</span><span class="o">.</span><span class="na">max</span><span class="o">(</span><span class="n">begin</span><span class="o">,</span> <span class="n">end</span><span class="o">);</span>        
+            <span class="o">}</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="na">substring</span><span class="o">(</span><span class="n">center</span> <span class="o">-</span> <span class="o">(</span><span class="n">maxLength</span> <span class="o">-</span> <span class="mi">1</span><span class="o">)</span> <span class="o">/</span> <span class="mi">2</span><span class="o">,</span> <span class="n">center</span> <span class="o">+</span> <span class="n">maxLength</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="o">);</span>
+    <span class="o">}</span>
+ 
+    <span class="kt">int</span> <span class="nf">centerExpand</span><span class="o">(</span><span class="n">String</span> <span class="n">s</span><span class="o">,</span> <span class="kt">int</span> <span class="n">begin</span><span class="o">,</span> <span class="kt">int</span> <span class="n">end</span><span class="o">){</span>
+        <span class="kt">int</span> <span class="n">left</span> <span class="o">=</span> <span class="n">begin</span><span class="o">,</span> <span class="n">right</span> <span class="o">=</span> <span class="n">end</span><span class="o">;</span>
+        <span class="k">while</span> <span class="o">(</span><span class="n">left</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">right</span> <span class="o">&lt;</span> <span class="n">s</span><span class="o">.</span><span class="na">length</span><span class="o">()</span> <span class="o">&amp;&amp;</span> <span class="n">s</span><span class="o">.</span><span class="na">charAt</span><span class="o">(</span><span class="n">left</span><span class="o">)</span> <span class="o">==</span> <span class="n">s</span><span class="o">.</span><span class="na">charAt</span><span class="o">(</span><span class="n">right</span><span class="o">)){</span>
+            <span class="n">left</span><span class="o">--;</span>
+            <span class="n">right</span><span class="o">++;</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="n">right</span> <span class="o">-</span> <span class="n">left</span> <span class="o">-</span> <span class="mi">1</span><span class="o">;</span>
+    <span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
 <h2 id="字符串-hash--二分">字符串 Hash &amp; 二分</h2>
+<p>在讲之前需要了解字符串进制哈希和查询子串的 hash 值 ，字符串哈希就是一种字符串到数字的映射。进制哈希就是规定进制数 base 和模数 mod 后，将字符串从a-z对应0-26按26进制转换后取模的过程。当然，为了防止哈希冲突（不同字符串有相同哈希值），你可以设置双哈希、大质数来尽可能避免。</p>
 
+<p>例如某字符串前缀的哈希值记为：h[i]，我们哈希时使用的进制为 base，那么有 <code class="highlighter-rouge">h[i]=h[i-1]*base+s[i]</code>,记 p[i] 表示 base
+的 i 次方。从而我们可以以常数时间复杂度得到字符串某子串的哈希值。就像对于数字，1234567，你想获得345，那就用<code class="highlighter-rouge">12345-12*345.length*base</code>一样，当然这里的base是10.被减数是12345而不是1234567.</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="rouge-code"><pre><span class="n">ull</span> <span class="nf">get_hash</span><span class="o">(</span><span class="kt">int</span> <span class="n">l</span><span class="o">,</span> <span class="kt">int</span> <span class="n">r</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">return</span> <span class="n">h</span><span class="o">[</span><span class="n">r</span><span class="o">]</span> <span class="o">-</span> <span class="n">h</span><span class="o">[</span><span class="n">l</span> <span class="o">-</span> <span class="mi">1</span><span class="o">]</span> <span class="o">*</span> <span class="n">p</span><span class="o">[</span><span class="n">r</span> <span class="o">-</span> <span class="n">l</span> <span class="o">+</span> <span class="mi">1</span><span class="o">];</span>
+<span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>然后回到回文串的问题，注意到回文子串具有单调性，即回文串的包含中心的子串也是回文串。因此我们可以进行二分，注意和上边的方法一样，需要区分奇回文aba和偶回文abba，最终结果取大即可。奇回文举例如下</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+</pre></td><td class="rouge-code"><pre><span class="kt">int</span> <span class="nf">binary_Search_od</span><span class="p">(</span><span class="kt">int</span> <span class="n">left</span><span class="p">,</span><span class="kt">int</span> <span class="n">right</span><span class="p">)</span><span class="c1">//二分答案中的奇数</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">maxx</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
+    <span class="k">while</span><span class="p">(</span><span class="n">left</span><span class="o">&lt;=</span><span class="n">right</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="kt">int</span> <span class="n">mid</span><span class="o">=</span><span class="p">(</span><span class="n">left</span><span class="o">+</span><span class="n">right</span><span class="p">)</span><span class="o">&gt;&gt;</span><span class="mi">1</span><span class="p">;</span>
+        <span class="kt">int</span> <span class="n">val</span><span class="o">=</span><span class="n">_ask</span><span class="p">(</span><span class="n">od</span><span class="p">[</span><span class="n">mid</span><span class="p">]);</span><span class="c1">//判断长度有没有为am[mid]的回文</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="c1">//如果存在且大于maxx，更新maxx</span>
+        <span class="p">{</span>
+            <span class="n">left</span><span class="o">=</span><span class="n">mid</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span>
+            <span class="n">maxx</span><span class="o">=</span><span class="n">max</span><span class="p">(</span><span class="n">maxx</span><span class="p">,</span><span class="n">val</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="k">else</span>
+            <span class="n">right</span><span class="o">=</span><span class="n">mid</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span><span class="c1">//否则减小长度</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">maxx</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>从 master theorem 来看，由于哈希的常数时间复杂度，整个的时间复杂度达到了 O(nlogn),比之前的中心扩展、dp 都要好。</p>
 <h2 id="manacher-算法">Manacher 算法</h2>
+<p>上边几种算法都是当初刷 OJ 自己想出来的，但这个算法太过于巧妙以至于我花了蛮久来理解。该算法由 Glenn Manacher 于1975年发明。是我们先梳理求解过程，然后试图通过对称性理解。
+该方法基于之前O(n^2)的中心扩展法，Manacher 算法的核心在于之前字符的“扩充”过程可以指导之后字符的“扩充”过程，使得之后每次扩充过程都不是从零开始。具体方法如下</p>
+<ol>
+  <li>把每个字符开头、中间和结尾插入填充字符如 # 来组成新的字符串以解决奇回文和偶回文不统一问题。确切的说是处理了偶回文问题，如cc，扩充后为#c#c#,可以从中间轴#处扩充并找到。这个过程是线性时间复杂度的。如下所示
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td><td class="rouge-code"><pre><span class="kd">public</span> <span class="kd">static</span> <span class="kt">char</span><span class="o">[]</span> <span class="nf">manacherString</span><span class="o">(</span><span class="n">String</span> <span class="n">str</span><span class="o">)</span> <span class="o">{</span>
+     <span class="kt">char</span><span class="o">[]</span> <span class="n">charArr</span> <span class="o">=</span> <span class="n">str</span><span class="o">.</span><span class="na">toCharArray</span><span class="o">();</span>
+     <span class="kt">char</span><span class="o">[]</span> <span class="n">res</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">char</span><span class="o">[</span><span class="n">str</span><span class="o">.</span><span class="na">length</span><span class="o">()</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="o">];</span>
+     <span class="kt">int</span> <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+     <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">res</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+         <span class="n">res</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="o">(</span><span class="n">i</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="o">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">?</span> <span class="sc">'#'</span> <span class="o">:</span> <span class="n">charArr</span><span class="o">[</span><span class="n">index</span><span class="o">++];</span>
+     <span class="o">}</span>
+     <span class="k">return</span> <span class="n">res</span><span class="o">;</span>
+ <span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div>    </div>
+  </li>
+  <li>
+    <p>对每个字符进行类似之前中心扩展法一样的扩充过程。设置如下三个辅助变量
+     - 数组 pArr，长度等同于处理后的字符串，pArr[i]的意义是以 i 位置上的字符作为回文中心的情况下，扩出去得到的最大回文半径是多少。比如对于字符串str： #d#b#u#b#d# 来说，pArr为[1,2,1,2,1,6,1,2,1,2,1]
+     - 整数 pR，指之前遍历的所有字符的所有回文半径中，最右即将到达的位置。还是用 #d#b#u#b#d# 为例：没遍历之前 pR 为 -1，str[0]=’#’，其回文半径为1，所以目前回文半径向右只能扩展到0位置，即将到达的位置为 pR=1。pR只会增大不会减小。
+     - 整数 index，最近一次 pR 更新时，回文中心的位置。如 str[0] 时 pR更新，index 就为0.</p>
+  </li>
+  <li>pArr 中的最大值就是处理后的str的最大回文半径，再对应回未加 # 前的字符串，问题就解决了。步骤3就是从左到右计算 pArr的过程，就是在这个过程中有些情况获得了加速从而最终获得线性时间复杂度。
+     - 假设现在计算到 str[i]，在i之前的计算过程中，pR和index都是动态更新的。可以分为两种情况。
+     - 如果pR-1位置没有包住当前的i位置，#d#b#u#b#d# 计算到str[1]=’u’，pR=1，此时和普通做法一样，从i位置向两侧扩展，这样并没有获得加速。
+     - 如果pR-1位置包住了当前的i位置，如#d#b#u#b#d#计算到 str[6…10]的时候，pR始终为11，此时可以获得优化。根据之前的pR定义我们知道，以 index 为中心，pR-1和pR-1关于index对称的字符是回文串，我们将其称为大回文串。以遍历所在当前位置i为中心的回文串称为右小，i关于index对称的称为左小，有三种情况<br />
+     1. 左小和右小完全在左大和右大内部，此时以位置i为中心的最大回文串可以直接确定为从右小’到左小’这一部分。
+     2. 左小和右小的左侧部分在左大和右大的外部，此时可以直接确定以i为中心的最长回文子串为为右大到右大’这一部分
+     3. 左小和左大是同一位置，即以i’为中心的最大回文串压在以 index 为中心的最大回文串边界上，此时右小和右大’也肯定同一个位置，此时以i为中心的最大回文串至少是右大’和右大这一段，但可能更大。</li>
+</ol>
 
-<p>##</p>
+<p>时间复杂度分析，我们可以看出来 Manacher 算法在检查过程中有明显优化，从步骤3来看，在计算一个未知的回文半径时要么完全不需要扩出去检查，要么每扩出去都会让回文半径pR到达更右的位置，pR前边已经定义过，只增不减，因此时间复杂度就是O(n)啦。
+代码实现</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+</pre></td><td class="rouge-code"><pre><span class="kd">public</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">maxLcpsLength</span><span class="o">(</span><span class="n">String</span> <span class="n">str</span><span class="o">)</span> <span class="o">{</span>
+		<span class="k">if</span> <span class="o">(</span><span class="n">str</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="n">str</span><span class="o">.</span><span class="na">length</span><span class="o">()</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+			<span class="k">return</span> <span class="mi">0</span><span class="o">;</span>
+		<span class="o">}</span>
+		<span class="kt">char</span><span class="o">[]</span> <span class="n">charArr</span> <span class="o">=</span> <span class="n">manacherString</span><span class="o">(</span><span class="n">str</span><span class="o">);</span>
+		<span class="kt">int</span><span class="o">[]</span> <span class="n">pArr</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="o">[</span><span class="n">charArr</span><span class="o">.</span><span class="na">length</span><span class="o">];</span>
+		<span class="kt">int</span> <span class="n">index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">;</span>
+		<span class="kt">int</span> <span class="n">pR</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">;</span>
+		<span class="kt">int</span> <span class="n">max</span> <span class="o">=</span> <span class="n">Integer</span><span class="o">.</span><span class="na">MIN_VALUE</span><span class="o">;</span>
+		<span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">charArr</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+			<span class="n">pArr</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="n">pR</span> <span class="o">&gt;</span> <span class="n">i</span> <span class="o">?</span> <span class="n">Math</span><span class="o">.</span><span class="na">min</span><span class="o">(</span><span class="n">pArr</span><span class="o">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">index</span> <span class="o">-</span> <span class="n">i</span><span class="o">],</span> <span class="n">pR</span> <span class="o">-</span> <span class="n">i</span><span class="o">)</span> <span class="o">:</span> <span class="mi">1</span><span class="o">;</span>
+			<span class="k">while</span> <span class="o">(</span><span class="n">i</span> <span class="o">+</span> <span class="n">pArr</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">&lt;</span> <span class="n">charArr</span><span class="o">.</span><span class="na">length</span> <span class="o">&amp;&amp;</span> <span class="n">i</span> <span class="o">-</span> <span class="n">pArr</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="o">)</span> <span class="o">{</span>
+				<span class="k">if</span> <span class="o">(</span><span class="n">charArr</span><span class="o">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">pArr</span><span class="o">[</span><span class="n">i</span><span class="o">]]</span> <span class="o">==</span> <span class="n">charArr</span><span class="o">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">pArr</span><span class="o">[</span><span class="n">i</span><span class="o">]])</span>
+					<span class="n">pArr</span><span class="o">[</span><span class="n">i</span><span class="o">]++;</span>
+				<span class="k">else</span> <span class="o">{</span>
+					<span class="k">break</span><span class="o">;</span>
+				<span class="o">}</span>
+			<span class="o">}</span>
+			<span class="k">if</span> <span class="o">(</span><span class="n">i</span> <span class="o">+</span> <span class="n">pArr</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">&gt;</span> <span class="n">pR</span><span class="o">)</span> <span class="o">{</span>
+				<span class="n">pR</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="n">pArr</span><span class="o">[</span><span class="n">i</span><span class="o">];</span>
+				<span class="n">index</span> <span class="o">=</span> <span class="n">i</span><span class="o">;</span>
+			<span class="o">}</span>
+			<span class="n">max</span> <span class="o">=</span> <span class="n">Math</span><span class="o">.</span><span class="na">max</span><span class="o">(</span><span class="n">max</span><span class="o">,</span> <span class="n">pArr</span><span class="o">[</span><span class="n">i</span><span class="o">]);</span>
+		<span class="o">}</span>
+		<span class="k">return</span> <span class="n">max</span> <span class="o">-</span> <span class="mi">1</span><span class="o">;</span>
+	<span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<ol>
+  <li>按照步骤3得到 pArr之后，再遍历一遍aArr数组，找到最大回文半径，然后对应回原来的长度即可（-1）。</li>
+</ol>
+
+<h2 id="后缀树">后缀树</h2>
+<p>Manacher 算法虽然巧妙，但是需要很大的技巧，理解有些困难，这里有一种更加通用的解法，就是后缀树。
+设S[i]表示字符串从i位置到最后的子数组，用S[i…S.length()-1]这些子数组构造 Trie 树，就得到后缀树。且将重复节点按如下规则
+        1. 每个节点可以存储多个字母
+        2. 字符串后+一个符号结尾，以防因某后缀是其他后缀的前缀而被压缩
+压缩后，就得到压缩后缀树。</p>
+
+<p>那么这和最长回文子串有什么关系呢？实际上有如下关系 <strong>str与其逆序的最长公共前缀是其最长回文子串的半径对应的字符串</strong>，从而，我们将求最长回文子串的问题转化为求某字符串与其逆序的最长公共前缀问题（LCA），利用trie求LCA方法如下：反转 str，两者生成的所有后缀子串压入到 trie 中，计算S1(i)与S2(n-i+1)节点的最低公共祖先,从而得到其最长公共前缀,再得到最长回文子串。
+所以问题转化为求两棵树的最低公共祖先，这个问题之前已经解决过了，<a href="">在这里</a>。</p>
+
+<h2 id="总结">总结</h2>
+<p>从暴力，到动态规划，到利用其对称性的中心扩展法，再到进位哈希+二分，然后是 Manacher 和后缀树，可以看出，因为回文串特殊的中心对称性，最优解可以做到线性时间复杂度————不可能更低了，你至少需要扫描一遍字符串。</p>
+<h2 id="参考资料">参考资料</h2>
+<ul>
+  <li><a href="https://www.cnblogs.com/henry-1202/p/10324966.html">hash进阶：使用字符串hash乱搞的姿势</a></li>
+  <li><a href="https://blog.csdn.net/ice110956/article/details/17299453">后缀树与最长回文子串</a></li>
+</ul>
 
 
                 <hr style="visibility: hidden;">
@@ -375,17 +589,22 @@
         </a>
         
         
-                <a data-sort="0003" 
-                    href="/archive/?tag=%E5%AE%9E%E8%B7%B5"
-                    title="实践"
-                    rel="2">实践</a>
+                <a data-sort="0004" 
+                    href="/archive/?tag=%E7%AE%97%E6%B3%95"
+                    title="算法"
+                    rel="3">算法</a>
         
-                <a data-sort="0002" 
+                <a data-sort="0004" 
                     href="/archive/?tag=Summary"
                     title="Summary"
                     rel="3">Summary</a>
         
-                <a data-sort="0003" 
+                <a data-sort="0005" 
+                    href="/archive/?tag=%E5%AE%9E%E8%B7%B5"
+                    title="实践"
+                    rel="2">实践</a>
+        
+                <a data-sort="0005" 
                     href="/archive/?tag=Clean+Code"
                     title="Clean Code"
                     rel="2">Clean Code
@@ -475,15 +694,6 @@
 
   
   
-  
-  <li>
-    <a target="_blank" href="https://www.zhihu.com/people/ubique-10">
-      <span class="fa-stack fa-lg">
-        <i class="fa fa-circle fa-stack-2x"></i>
-        <i class="fa  fa-stack-1x fa-inverse">知</i>
-      </span>
-    </a>
-  </li>
   
   
   
