@@ -5,8 +5,8 @@
     <description>关于技术与生活，探索与分享 | 丁彪，Programmer,Software Engineer,amateur writer | 这里是 @Ubik丁彪 的个人博客，与你一起发现更大的世界。</description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml" />
-    <pubDate>Tue, 04 Jun 2019 08:58:29 +0800</pubDate>
-    <lastBuildDate>Tue, 04 Jun 2019 08:58:29 +0800</lastBuildDate>
+    <pubDate>Tue, 04 Jun 2019 09:11:20 +0800</pubDate>
+    <lastBuildDate>Tue, 04 Jun 2019 09:11:20 +0800</lastBuildDate>
     <generator>Jekyll v3.8.5</generator>
     
       <item>
@@ -1746,13 +1746,13 @@
 
 &lt;h2 id=&quot;后缀树&quot;&gt;后缀树&lt;/h2&gt;
 &lt;p&gt;Manacher 算法虽然巧妙，但是需要很大的技巧，理解有些困难，这里有一种更加通用的解法，就是后缀树。
-设S[i]表示字符串从i位置到最后的子数组，用S[i…S.length()-1]这些子数组构造 Trie 树，就得到后缀树。且将重复节点按如下规则
+设S[i]表示字符串从i位置到最后的子数组，用S[i…S.length()-1]这些子数组构造 &lt;a href=&quot;https://ubique0305.github.io/2019/03/22/Trie/&quot;&gt;Trie 树&lt;/a&gt;，就得到后缀树。且将重复节点按如下规则
         1. 每个节点可以存储多个字母
         2. 字符串后+一个符号结尾，以防因某后缀是其他后缀的前缀而被压缩
 压缩后，就得到压缩后缀树。&lt;/p&gt;
 
 &lt;p&gt;那么这和最长回文子串有什么关系呢？实际上有如下关系 &lt;strong&gt;str与其逆序的最长公共前缀是其最长回文子串的半径对应的字符串&lt;/strong&gt;，从而，我们将求最长回文子串的问题转化为求某字符串与其逆序的最长公共前缀问题（LCA），利用trie求LCA方法如下：反转 str，两者生成的所有后缀子串压入到 trie 中，计算S1(i)与S2(n-i+1)节点的最低公共祖先,从而得到其最长公共前缀,再得到最长回文子串。
-所以问题转化为求两棵树的最低公共祖先，这个问题之前已经解决过了，&lt;a href=&quot;&quot;&gt;在这里&lt;/a&gt;。&lt;/p&gt;
+所以问题转化为求两棵树的最低公共祖先，这个问题之前已经解决过了，&lt;a href=&quot;https://ubique0305.github.io/2019/03/23/二叉树中两节点的最近公共祖先/&quot;&gt;在这里&lt;/a&gt;。&lt;/p&gt;
 
 &lt;h2 id=&quot;总结&quot;&gt;总结&lt;/h2&gt;
 &lt;p&gt;从暴力，到动态规划，到利用其对称性的中心扩展法，再到进位哈希+二分，然后是 Manacher 和后缀树，可以看出，因为回文串特殊的中心对称性，最优解可以做到线性时间复杂度————不可能更低了，你至少需要扫描一遍字符串。&lt;/p&gt;
