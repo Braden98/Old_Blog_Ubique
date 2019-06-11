@@ -14,9 +14,9 @@
     <meta property="og:title" content="Import * 真的比单项导入慢吗？ - 丁彪的博客 | Ubik Blog">
     
     <meta property="og:type" content="article">
-    <meta property="og:description" content="在中间件考试的前一天，同学在群里 “问写 Corba 代码的时候能使用 import * 吗？”，老师说这样会把无关的类写入字节码，最好不要这样。
-因为当时已经学习过编译原理，顺便又在看《深入理解 Java Web 技术内幕》一书，于是对这个说法产生了很大的怀疑：Java 的编译器是如此不智能以至于 Bytecode 这种寸土寸金的地方都要因一句 import * 添加很多无关的字节吗？
-于...">
+    <meta property="og:description" content="在中间件考试的前一天，同学在群里问”写 Corba 代码的时候能使用 import * 吗？”，老师说这样会把无关的类写入字节码，最好不要这样。
+
+">
     
     <meta property="article:published_time" content="2019-04-01T19:00:00Z">
     
@@ -242,8 +242,9 @@
                 <!-- Multi-Lingual -->
                 
 
-				<p>在中间件考试的前一天，同学在群里 “问写 Corba 代码的时候能使用 import * 吗？”，老师说这样会把无关的类写入字节码，最好不要这样。
-因为当时已经学习过编译原理，顺便又在看《深入理解 Java Web 技术内幕》一书，于是对这个说法产生了很大的怀疑：Java 的编译器是如此不智能以至于 Bytecode 这种寸土寸金的地方都要因一句 <code class="highlighter-rouge">import *</code> 添加很多无关的字节吗？
+				<p>在中间件考试的前一天，同学在群里问”写 Corba 代码的时候能使用 import * 吗？”，老师说这样会把无关的类写入字节码，最好不要这样。</p>
+
+<p>因为当时已经学习过编译原理，顺便又在看《深入理解 Java Web 技术内幕》一书，于是对这个说法产生了很大的怀疑：Java 的编译器是如此不智能以至于 Bytecode 这种寸土寸金的地方都要因一句 <code class="highlighter-rouge">import *</code> 添加很多无关的字节吗？
 于是我开始了实验…</p>
 <h1 id="import--对-javac生成的字节码的影响">import * 对 Javac生成的字节码的影响</h1>
 <p>我们知道，在非静态导入的情况下，import 可以有 <code class="highlighter-rouge">import *</code> 和<code class="highlighter-rouge">import 具体类</code>两种形式，我们编写如下代码</p>
@@ -362,6 +363,10 @@
 基于此我们去找 javac 的源码，通过阅读源码，笔者了解到：在javac的语法分析解析出package语法后（显然 Java 代码的第一行是 Package），会通过importDeclaration()方法生产JCImport语法树，如果是 <code class="highlighter-rouge">import *</code>，那么树的叶子结点 JCFieldAccess 的 Token 名为 asterisk 并结束,这实际上是一个可替换的标识符。Javac 在<strong>语义分析</strong>时会按顺序在该类本身及其嵌套类、单类型导入、当前包找不到所需类后才去找按需导入并通过回溯那条 <code class="highlighter-rouge">import *</code>所指代的类的集合来寻找正确的类 替换AST，所以会额外增加编译时间。</p>
 
 <p>等等，这是不是有些熟悉？先预编译，然后动态替换。是的，SQL 注入的预防就是用的类似的方法。</p>
+<blockquote>
+  <p>在程序运行时第一次操作数据库之前，SQL语句已经被数据库分析，编译和优化，对应的执行计划也会缓存下来并允许数据库已参数化的形式进行查询，当运行时动态地把参数传给PreprareStatement时，即使参数里有敏感字符如 or ‘1=1’也数据库会作为一个参数一个字段的属性值来处理而不会作为一个SQL指令。</p>
+</blockquote>
+
 <h2 id="工程实践">工程实践</h2>
 <ol>
   <li>

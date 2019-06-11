@@ -5,8 +5,8 @@
     <description>关于技术与生活，探索与分享 | 丁彪，Programmer,Software Engineer,amateur writer | 这里是 @Ubik丁彪 的个人博客，与你一起发现更大的世界。</description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml" />
-    <pubDate>Tue, 04 Jun 2019 09:11:20 +0800</pubDate>
-    <lastBuildDate>Tue, 04 Jun 2019 09:11:20 +0800</lastBuildDate>
+    <pubDate>Tue, 11 Jun 2019 22:29:32 +0800</pubDate>
+    <lastBuildDate>Tue, 11 Jun 2019 22:29:32 +0800</lastBuildDate>
     <generator>Jekyll v3.8.5</generator>
     
       <item>
@@ -1497,23 +1497,39 @@
 
 &lt;h2 id=&quot;暴力法&quot;&gt;暴力法&lt;/h2&gt;
 &lt;p&gt;枚举字符串的每一个子串，判断其是否是回文串，如果是且比 &lt;code class=&quot;highlighter-rouge&quot;&gt;res.length()&lt;/code&gt;，就更新 res 。枚举每个字串需要 O(n^2) 的时间复杂度，判断每一个子串是否为回文串需要 O(n) 的时间复杂度，因此，总的时间复杂度为 O(n^3). 思路非常简单，这里不再赘述,实现如下。&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-Java&quot;&gt;public int longestPalindrome(String s) {
-        if(s.isEmpty()){
-            return s;
-        }
-        String res=s.substring(0,1);
-        for (int i = 0; i &amp;lt; s.length(); i++) {
-            for (int j = i + 1; j &amp;lt;= s.length(); j++) {
-                String k=s.substring(i,j);
-                String rk=new StringBuffer(k).reverse().toString();
-                if(k.equals(rk)&amp;amp;&amp;amp;k.length()&amp;gt;res.length()){
-                    res=k;
-                }
-            }
-        }
-        return res.length();
-    }
-&lt;/code&gt;&lt;/pre&gt;
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;longestPalindrome&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;isEmpty&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()){&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;substring&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;k&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;substring&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rk&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;StringBuffer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;k&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;reverse&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;toString&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+                &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;k&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;equals&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rk&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&amp;amp;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;k&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()){&lt;/span&gt;
+                    &lt;span class=&quot;n&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;k&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+                &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+            &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;h2 id=&quot;动态规划法&quot;&gt;动态规划法&lt;/h2&gt;
 &lt;p&gt;因为之前解决过最长公共子串 LCS 的问题，于是很自然地想到，将题目所给字符串倒置，利用回文串正序读和逆序读结果一样的特性，对其求 LCS ，res 就是本题的答案。但在制作 case 的时候，笔者发现这是错误的解法，因为一旦原来的字符串中已经同时存在某个字串及其逆序，这个算法就无法找到最长的那一个。比如abcdefcba，输出的是错误结果 abc。&lt;/p&gt;
@@ -1526,8 +1542,9 @@
 &lt;/ol&gt;
 
 &lt;p&gt;由此可得状态转移方程&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-Java&quot;&gt;dp[i][j]=S[i]==S[j]? dp[i+1][j-1]:0;
-&lt;/code&gt;&lt;/pre&gt;
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;n&quot;&gt;dp&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;][&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;S&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]==&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;S&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]?&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dp&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;][&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;但还有一个问题，对于该状态转移方程，如果按照 i 和 j 从小到大的顺序来枚举子串的两个端点，然后更新 &lt;code class=&quot;highlighter-rouge&quot;&gt;dp[i][j]&lt;/code&gt; ，会无法保证 &lt;code class=&quot;highlighter-rouge&quot;&gt;dp[i+1][j-1]&lt;/code&gt; 已经被计算过，出现空指针异常。注意到回文子串的对称性，通过手动计算 dp 二维数组，发现可通过枚举子串长度的方式进行第一轮遍历，第二遍按照子串的初始位置进行遍历，如此，即可获得正确的dp数组。
 时间复杂度方面，先枚举子串的长度再枚举作第一轮循环，再枚举子串的起始端点作为第二轮循环，因此时间复杂度为 O(n^2),比最基本的蛮力法要好多了。关键代码如下所示（笔者大二上提交 OJ 的 C++ 代码）&lt;/p&gt;
 &lt;pre&gt;&lt;code class=&quot;language-C++&quot;&gt;for (int L = 3; L &amp;lt;= len; L++)//枚举子串的长度作为一轮遍历的方法
@@ -1740,9 +1757,7 @@
 	&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
 &lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;ol&gt;
-  &lt;li&gt;按照步骤3得到 pArr之后，再遍历一遍aArr数组，找到最大回文半径，然后对应回原来的长度即可（-1）。&lt;/li&gt;
-&lt;/ol&gt;
+&lt;p&gt;按照步骤3得到 pArr之后，再遍历一遍aArr数组，找到最大回文半径，然后对应回原来的长度即可（-1）。&lt;/p&gt;
 
 &lt;h2 id=&quot;后缀树&quot;&gt;后缀树&lt;/h2&gt;
 &lt;p&gt;Manacher 算法虽然巧妙，但是需要很大的技巧，理解有些困难，这里有一种更加通用的解法，就是后缀树。
@@ -1775,8 +1790,9 @@
     
       <item>
         <title>Import * 真的比单项导入慢吗？</title>
-        <description>&lt;p&gt;在中间件考试的前一天，同学在群里 “问写 Corba 代码的时候能使用 import * 吗？”，老师说这样会把无关的类写入字节码，最好不要这样。
-因为当时已经学习过编译原理，顺便又在看《深入理解 Java Web 技术内幕》一书，于是对这个说法产生了很大的怀疑：Java 的编译器是如此不智能以至于 Bytecode 这种寸土寸金的地方都要因一句 &lt;code class=&quot;highlighter-rouge&quot;&gt;import *&lt;/code&gt; 添加很多无关的字节吗？
+        <description>&lt;p&gt;在中间件考试的前一天，同学在群里问”写 Corba 代码的时候能使用 import * 吗？”，老师说这样会把无关的类写入字节码，最好不要这样。&lt;/p&gt;
+
+&lt;p&gt;因为当时已经学习过编译原理，顺便又在看《深入理解 Java Web 技术内幕》一书，于是对这个说法产生了很大的怀疑：Java 的编译器是如此不智能以至于 Bytecode 这种寸土寸金的地方都要因一句 &lt;code class=&quot;highlighter-rouge&quot;&gt;import *&lt;/code&gt; 添加很多无关的字节吗？
 于是我开始了实验…&lt;/p&gt;
 &lt;h1 id=&quot;import--对-javac生成的字节码的影响&quot;&gt;import * 对 Javac生成的字节码的影响&lt;/h1&gt;
 &lt;p&gt;我们知道，在非静态导入的情况下，import 可以有 &lt;code class=&quot;highlighter-rouge&quot;&gt;import *&lt;/code&gt; 和&lt;code class=&quot;highlighter-rouge&quot;&gt;import 具体类&lt;/code&gt;两种形式，我们编写如下代码&lt;/p&gt;
@@ -1895,6 +1911,10 @@
 基于此我们去找 javac 的源码，通过阅读源码，笔者了解到：在javac的语法分析解析出package语法后（显然 Java 代码的第一行是 Package），会通过importDeclaration()方法生产JCImport语法树，如果是 &lt;code class=&quot;highlighter-rouge&quot;&gt;import *&lt;/code&gt;，那么树的叶子结点 JCFieldAccess 的 Token 名为 asterisk 并结束,这实际上是一个可替换的标识符。Javac 在&lt;strong&gt;语义分析&lt;/strong&gt;时会按顺序在该类本身及其嵌套类、单类型导入、当前包找不到所需类后才去找按需导入并通过回溯那条 &lt;code class=&quot;highlighter-rouge&quot;&gt;import *&lt;/code&gt;所指代的类的集合来寻找正确的类 替换AST，所以会额外增加编译时间。&lt;/p&gt;
 
 &lt;p&gt;等等，这是不是有些熟悉？先预编译，然后动态替换。是的，SQL 注入的预防就是用的类似的方法。&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;在程序运行时第一次操作数据库之前，SQL语句已经被数据库分析，编译和优化，对应的执行计划也会缓存下来并允许数据库已参数化的形式进行查询，当运行时动态地把参数传给PreprareStatement时，即使参数里有敏感字符如 or ‘1=1’也数据库会作为一个参数一个字段的属性值来处理而不会作为一个SQL指令。&lt;/p&gt;
+&lt;/blockquote&gt;
+
 &lt;h2 id=&quot;工程实践&quot;&gt;工程实践&lt;/h2&gt;
 &lt;ol&gt;
   &lt;li&gt;
@@ -2379,11 +2399,11 @@
 &lt;p&gt;空间换时间，利用字符串的公共前缀来减少无谓的字符串比较以达到提高查询效率的目的，从上述实现中可以看出，插入查询的时间复杂度都与待操作字符串长度线性相关。&lt;/p&gt;
 &lt;h1 id=&quot;应用&quot;&gt;应用&lt;/h1&gt;
 &lt;ol&gt;
-  &lt;li&gt;前缀匹配 
-比如搜索引擎的自动补全&lt;/li&gt;
-  &lt;li&gt;字符串检索&lt;/li&gt;
+  &lt;li&gt;查找&lt;/li&gt;
   &lt;li&gt;词频统计&lt;/li&gt;
   &lt;li&gt;字符串排序&lt;/li&gt;
+  &lt;li&gt;前缀匹配&lt;/li&gt;
+  &lt;li&gt;辅助结构如后缀树和AC自动机&lt;/li&gt;
 &lt;/ol&gt;
 </description>
         <pubDate>Fri, 22 Mar 2019 19:02:14 +0800</pubDate>
