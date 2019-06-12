@@ -1,17 +1,17 @@
 ---
 layout:     post
-title:      "深入理解动态规划"
-subtitle:   "两种写法、三个概念与若干题解"
-date:       2019-01-23 12:31:14
+title:      "动态规划-入门篇"
+subtitle:   "两种写法、三个概念与简单题解"
+date:       2019-03-02 10:11:14
 author:     "Ubik"
-header-img: "img/post-bg-halting.jpg"
+header-img: "img/post-bg-infinity.jpg"
 catalog: true
 comments: true
 tags:
-    - 算法
     - 动态规划
+    - 算法
+    - 题解
 ---
-
 
 
 #  Leetcode Dynamic Programming 动态规划
@@ -39,7 +39,7 @@ dp实际上就是通过记录（维护若干数据结构）来避免重复求解
 边界条件是dp[2]=0,dp[3]=2;
 2.数学推导，由基本不等式知，n个数的算术平均数大于等于它们的几何平均数且当且仅当各个数字相等时取等。为此设要分成的数字是x，f(x)=x^(n/x)，对其求导求得x=e时取最大，故取3；然后直接计算pow即可。注意到递归求解pow需要的时间复杂度为O(LogN)（主成分定理根据递归表达式可求得），O（logN)空间复杂度，。
 另外附一个非递归实现pow
-```
+``` c++
 #include<iostream>
 using namespace std;
  
@@ -73,7 +73,7 @@ T power(T x,Integer n)
 `
 如果一个数x可以表示为一个任意数a加上一个平方数bｘb，也就是x=a+bｘb，那么能组成这个数x最少的平方数个数，就是能组成a最少的平方数个数加上1（因为b*b已经是平方数了）。
 
-```
+```java
 public static int numSquares(int n) {
 	int[] dp = new int[n + 1];
 	// 将所有非平方数的结果置最大，保证之后比较的时候不被选中
@@ -98,7 +98,7 @@ public static int numSquares(int n) {
 2.数学解法
 ![插图]({{site.baseurl}}/img/in-post/15539558523343.jpg)
 根据四平方和定理，任意一个正整数均可表示为4个整数的平方和，其实是可以表示为4个以内的平方数之和，那么就是说返回结果只有1,2,3或4其中的一个，首先我们将数字化简一下，由于一个数如果含有因子4，那么我们可以把4都去掉，并不影响结果，比如2和8,3和12等等，返回的结果都相同，如果一个数除以8余7的话，那么肯定是由4个完全平方数组成。
-```
+``` java
 public class Solution {
     public int numSquares(int n) {
 		while (n % 4 == 0) n /= 4;
@@ -119,7 +119,7 @@ public class Solution {
 ###思路
 最简单的记忆化搜索代替递归，注意从0开始，故new一个n+1长的dp数组。
 ### 代码
-```
+``` c++
 class Solution {
     public int fib(int N) {
         //注意从0开始，输入N，则有n+1项，故dp长度为n+1
@@ -140,7 +140,7 @@ class Solution {
 ### 思路
 要爬n阶楼梯，每次只能走一步或者两步，那么最终结果就分两种：从n-1阶走上来和从n-2阶走上来，由此得递推公式：`dp[n]=dp[n-1]+dp[n-2]`,注意到index存在n-2，故0，1需要特殊考虑
 ### 代码
-```
+``` java
 class Solution {
     public int climbStairs(int n) {
         if(n==1)
@@ -161,7 +161,7 @@ class Solution {
 和上一题一样，到n层的最少花费只需要考虑从n-1层或者n-2层来加上n层的即可`dp[i]=Math.min(dp[i-1],dp[i-2])+cost[i];
 `。边界条件是`dp[i]=cost[i],i=1或者2`。
 ###  代码
-```
+``` java
 class Solution {
     public int minCostClimbingStairs(int[] cost) {
         int len=cost.length;
@@ -187,7 +187,7 @@ class Solution {
 类似fib数列和爬楼梯，只是dp[n-1]不需加上，比如11，第二位解为单位字母A并不增加个数，只有dp[n-2]才会额外增加。此时的条件是数字在1～26之间。
 一开始有一点疑惑，会不会有重叠？其实不会，因为这是子问题，不同的子问题之间（这里是dp[n-2]和dp[n-1]）是不同的问题，前边方法可能是重叠的，但因为问题不同，结果也就不会重叠。
 ### 代码
-```
+``` java
 public class Solution {
     public int numDecodings(String s) {
         if (s.isEmpty() || (s.length() > 1 && s.charAt(0) == '0')) return 0;
@@ -209,7 +209,7 @@ public class Solution {
 ### 
 ### 代码
 dp
-```
+``` java
 class Solution {
     public int uniquePaths(int m, int n) {
         int[][] dp=new int[m][n];
@@ -225,7 +225,7 @@ class Solution {
 }
 ```
 数学解法（java报超时了）
-```
+``` java
 class Solution {
 public:
     int uniquePaths(int m, int n) {
@@ -246,7 +246,7 @@ public:
 `dp[i]=max(dp[j]+(nums[i]>nums[j]?1:0),dp[i]),0<i<nums.length`
 ### 代码
 出现了两个问题，一是选择运算符的优先级，二是代码中注释问题，如下。
-```
+``` java
 class Solution {
     public int lengthOfLIS(int[] nums) {
         int[] dp=new int[nums.length];

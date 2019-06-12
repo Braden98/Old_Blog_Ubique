@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="description" content="关于技术与生活，探索与分享 | 丁彪，Programmer,Software Engineer,amateur writer | 这里是 @Ubik丁彪 的个人博客，与你一起发现更大的世界。">
+    <meta name="keywords"  content="丁彪, Ubik丁彪, Ubik, AdamUbik, 丁彪的博客, Ubik Blog, 博客, 个人网站, 互联网, Web, 后端, 架构 ">
+    <meta name="theme-color" content="#000000">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Lambda 表达式重构 OO 设计模式 - 丁彪的博客 | Ubik Blog">
+    
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="新的语言特性往往借鉴了已有的设计模式，比如Java5中引入了for-each循环，由于它的稳定和简洁，已经替代了很多显式使用迭代器的情形。Java 7中推出的菱形操作符（&lt;&gt;）让程序员在创建实例时无需显式使用泛型。
+很多设计模式与面向对象结合起来非常臃肿，Lambda 表达式通过消除封装在类中的僵化代码为这些设计模式面临的问题提供了解决方案。
+
+">
+    
+    <meta property="article:published_time" content="2019-06-02T20:33:14Z">
+    
+    
+    <meta property="article:author" content="Ubik">
+    
+    
+    <meta property="article:tag" content="Lambda">
+    
+    <meta property="article:tag" content="设计模式">
+    
+    <meta property="article:tag" content="重构">
+    
+    
+    <meta property="og:image" content="http://localhost:4000/img/avatar-ubik-ny.png">
+    <meta property="og:url" content="http://localhost:4000/2019/06/02/%E4%BD%BF%E7%94%A8-Lambda-%E8%A1%A8%E8%BE%BE%E5%BC%8F%E9%87%8D%E6%9E%84-OO-%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
+    <meta property="og:site_name" content="丁彪的博客 | Ubik Blog">
+    
+    <title>Lambda 表达式重构 OO 设计模式 - 丁彪的博客 | Ubik Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="http://localhost:4000/2019/06/02/%E4%BD%BF%E7%94%A8-Lambda-%E8%A1%A8%E8%BE%BE%E5%BC%8F%E9%87%8D%E6%9E%84-OO-%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/hux-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Ubik Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    
+                    
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    
+                    
+                    <li>
+                        <a href="/archive/">Archive</a>
+                    </li>
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Image to hack wechat -->
+<!-- <img src="/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="/img/post-bg-halting.jpg" width="0" height="0"> -->
+
+<!-- Post Header -->
+
+
+
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/post-bg-halting.jpg');
+        background: ;
+    }
+
+    
+</style>
+
+<header class="intro-header" >
+
+    <div class="header-mask"></div>
+    
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/archive/?tag=Lambda" title="Lambda">Lambda</a>
+                        
+                        <a class="tag" href="/archive/?tag=%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F" title="设计模式">设计模式</a>
+                        
+                        <a class="tag" href="/archive/?tag=%E9%87%8D%E6%9E%84" title="重构">重构</a>
+                        
+                    </div>
+                    <h1>Lambda 表达式重构 OO 设计模式</h1>
+                    
+                    <h2 class="subheading">唯一的关键是消除封装在类中的冗余代码</h2>
+                    <span class="meta">Posted by Ubik on June 2, 2019</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+
+
+
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+				<p>新的语言特性往往借鉴了已有的设计模式，比如Java5中引入了for-each循环，由于它的稳定和简洁，已经替代了很多显式使用迭代器的情形。Java 7中推出的菱形操作符（&lt;&gt;）让程序员在创建实例时无需显式使用泛型。
+很多设计模式与面向对象结合起来非常臃肿，Lambda 表达式通过<strong>消除封装在类中的僵化代码</strong>为这些设计模式面临的问题提供了解决方案。</p>
+
+<h1 id="工厂模式">工厂模式</h1>
+<p>使用工厂模式，你无需向客户暴露实例化的逻辑就能完成对象的创建。你向工厂提交“订单”，工厂通过多态返回给你“产品”。如下所示</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td><td class="rouge-code"><pre><span class="kd">static</span> <span class="kd">private</span> <span class="kd">class</span> <span class="nc">ProductFactory</span> <span class="o">{</span>
+        <span class="kd">public</span> <span class="kd">static</span> <span class="n">Product</span> <span class="nf">createProduct</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">){</span>
+            <span class="k">switch</span><span class="o">(</span><span class="n">name</span><span class="o">){</span>
+                <span class="k">case</span> <span class="s">"loan"</span><span class="o">:</span> <span class="k">return</span> <span class="k">new</span> <span class="n">Loan</span><span class="o">();</span>
+                <span class="k">case</span> <span class="s">"stock"</span><span class="o">:</span> <span class="k">return</span> <span class="k">new</span> <span class="n">Stock</span><span class="o">();</span>
+                <span class="k">case</span> <span class="s">"bond"</span><span class="o">:</span> <span class="k">return</span> <span class="k">new</span> <span class="n">Bond</span><span class="o">();</span>
+                <span class="k">default</span><span class="o">:</span> <span class="k">throw</span> <span class="k">new</span> <span class="n">RuntimeException</span><span class="o">(</span><span class="s">"No such product "</span> <span class="o">+</span> <span class="n">name</span><span class="o">);</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>我们可以像引用构造方法一样引用函数，由此，可通过 Map，将产品名映射到对应的构造函数</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="kd">final</span> <span class="kd">static</span> <span class="kd">private</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Supplier</span><span class="o">&lt;</span><span class="n">Product</span><span class="o">&gt;&gt;</span> <span class="n">map</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;&gt;();</span>
+    <span class="kd">static</span> <span class="o">{</span>
+        <span class="n">map</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">"loan"</span><span class="o">,</span> <span class="nl">Loan:</span><span class="o">:</span><span class="k">new</span><span class="o">);</span>
+        <span class="n">map</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">"stock"</span><span class="o">,</span> <span class="nl">Stock:</span><span class="o">:</span><span class="k">new</span><span class="o">);</span>
+        <span class="n">map</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">"bond"</span><span class="o">,</span> <span class="nl">Bond:</span><span class="o">:</span><span class="k">new</span><span class="o">);</span>
+    <span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>之后，利用 Map 来实例化不同的产品。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td><td class="rouge-code"><pre><span class="kd">public</span> <span class="kd">static</span> <span class="n">Product</span> <span class="nf">createProductLambda</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">){</span>
+            <span class="n">Supplier</span><span class="o">&lt;</span><span class="n">Product</span><span class="o">&gt;</span> <span class="n">p</span> <span class="o">=</span> <span class="n">map</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">name</span><span class="o">);</span>
+            <span class="k">if</span><span class="o">(</span><span class="n">p</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="k">return</span> <span class="n">p</span><span class="o">.</span><span class="na">get</span><span class="o">();</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nf">RuntimeException</span><span class="o">(</span><span class="s">"No such product "</span> <span class="o">+</span> <span class="n">name</span><span class="o">);</span>
+        <span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<h1 id="模版方法">模版方法</h1>
+<p>当我们已有一个算法框架，但需要对其进行部分改动以使用时，可以使用模版方法。
+举个例子</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre><span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">OnlineBanking</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">processCustomer</span><span class="o">(</span><span class="kt">int</span> <span class="n">id</span><span class="o">){</span>
+        <span class="n">Customer</span> <span class="n">c</span> <span class="o">=</span> <span class="n">Database</span><span class="o">.</span><span class="na">getCustomerWithId</span><span class="o">(</span><span class="n">id</span><span class="o">);</span>
+        <span class="n">makeCustomerHappy</span><span class="o">(</span><span class="n">c</span><span class="o">);</span>
+    <span class="o">}</span>
+    <span class="kd">abstract</span> <span class="kt">void</span> <span class="nf">makeCustomerHappy</span><span class="o">(</span><span class="n">Customer</span> <span class="n">c</span><span class="o">);</span>
+<span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>processCustomer 搭建了在线银行算法的框架，不同的银行继承 OnlineBanking 并提供不同实现。
+如何使用 Lambda 表达式重构呢？向processCustomer方法引入了第二个参数，它是一个Consumer<Customer>类型的参数，与前文定义的makeCustomerHappy的特征保持一致：</Customer></p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="rouge-code"><pre><span class="kd">public</span> <span class="kt">void</span> <span class="nf">processCustomer</span><span class="o">(</span><span class="kt">int</span> <span class="n">id</span><span class="o">,</span> <span class="n">Consumer</span><span class="o">&lt;</span><span class="n">Customer</span><span class="o">&gt;</span> <span class="n">makeCustomerHappy</span><span class="o">){</span>
+        <span class="n">Customer</span> <span class="n">c</span> <span class="o">=</span> <span class="n">Database</span><span class="o">.</span><span class="na">getCustomerWithId</span><span class="o">(</span><span class="n">id</span><span class="o">);</span>
+        <span class="n">makeCustomerHappy</span><span class="o">.</span><span class="na">accept</span><span class="o">(</span><span class="n">c</span><span class="o">);</span>
+    <span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>之后，只要向新建的 OnlineBanking 类传递 Lambda 表达式即可。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre>        <span class="k">new</span> <span class="n">OnlineBankingLambda</span><span class="o">().</span><span class="na">processCustomer</span><span class="o">(</span><span class="mi">1337</span><span class="o">,</span> <span class="o">(</span><span class="n">Customer</span> <span class="n">c</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Hello!"</span><span class="o">));</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<h1 id="策略模式">策略模式</h1>
+<p>策略模式包含三部分：</p>
+<ul>
+  <li>
+    <p>一个代表算法的接口</p>
+  </li>
+  <li>若干个算法的不同的具体实现</li>
+  <li>若干个使用策略对象的用户
+注意到具体实现类实现了函数接口，我们可以使用 Lambda表达式来代替策略模式的第二部分，从而达到简化的目的。
+如下所示</li>
+</ul>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+</pre></td><td class="rouge-code"><pre><span class="c1">//Part1 函数接口</span>
+<span class="kd">interface</span> <span class="nc">ValidationStrategy</span> <span class="o">{</span>
+        <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">execute</span><span class="o">(</span><span class="n">String</span> <span class="n">s</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="c1">//Part2 接口的实现</span>
+<span class="kd">static</span> <span class="kd">private</span> <span class="kd">class</span> <span class="nc">IsAllLowerCase</span> <span class="kd">implements</span> <span class="n">ValidationStrategy</span> <span class="o">{</span>
+        <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">execute</span><span class="o">(</span><span class="n">String</span> <span class="n">s</span><span class="o">){</span>
+            <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="na">matches</span><span class="o">(</span><span class="s">"[a-z]+"</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+    
+<span class="kd">static</span> <span class="kd">private</span> <span class="kd">class</span> <span class="nc">IsNumeric</span> <span class="kd">implements</span> <span class="n">ValidationStrategy</span> <span class="o">{</span>
+        <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">execute</span><span class="o">(</span><span class="n">String</span> <span class="n">s</span><span class="o">){</span>
+            <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="na">matches</span><span class="o">(</span><span class="s">"\\d+"</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="c1">//Part3 接口的调用</span>
+<span class="kd">static</span> <span class="kd">private</span> <span class="kd">class</span> <span class="nc">Validator</span><span class="o">{</span>
+        <span class="kd">private</span> <span class="kd">final</span> <span class="n">ValidationStrategy</span> <span class="n">strategy</span><span class="o">;</span>
+        <span class="kd">public</span> <span class="nf">Validator</span><span class="o">(</span><span class="n">ValidationStrategy</span> <span class="n">v</span><span class="o">){</span>
+            <span class="k">this</span><span class="o">.</span><span class="na">strategy</span> <span class="o">=</span> <span class="n">v</span><span class="o">;</span>
+        <span class="o">}</span>
+        <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">validate</span><span class="o">(</span><span class="n">String</span> <span class="n">s</span><span class="o">){</span>
+            <span class="k">return</span> <span class="n">strategy</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="n">s</span><span class="o">);</span> <span class="o">}</span>
+    <span class="o">}</span>
+    
+    
+<span class="c1">//测试代码</span>
+<span class="n">Validator</span> <span class="n">v1</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Validator</span><span class="o">(</span><span class="k">new</span> <span class="n">IsNumeric</span><span class="o">());</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">v1</span><span class="o">.</span><span class="na">validate</span><span class="o">(</span><span class="s">"aaaa"</span><span class="o">));</span>
+        <span class="n">Validator</span> <span class="n">v2</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Validator</span><span class="o">(</span><span class="k">new</span> <span class="n">IsAllLowerCase</span> <span class="o">());</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">v2</span><span class="o">.</span><span class="na">validate</span><span class="o">(</span><span class="s">"bbbb"</span><span class="o">));</span>
+        
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>经过重构后，如下所示</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="c1">//Part3 调用</span>
+<span class="n">Validator</span> <span class="n">v3</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Validator</span><span class="o">((</span><span class="n">String</span> <span class="n">s</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">s</span><span class="o">.</span><span class="na">matches</span><span class="o">(</span><span class="s">"\\d+"</span><span class="o">));</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">v3</span><span class="o">.</span><span class="na">validate</span><span class="o">(</span><span class="s">"aaaa"</span><span class="o">));</span>
+        <span class="n">Validator</span> <span class="n">v4</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Validator</span><span class="o">((</span><span class="n">String</span> <span class="n">s</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">s</span><span class="o">.</span><span class="na">matches</span><span class="o">(</span><span class="s">"[a-z]+"</span><span class="o">));</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">v4</span><span class="o">.</span><span class="na">validate</span><span class="o">(</span><span class="s">"bbbb"</span><span class="o">));</span>
+        
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<h1 id="责任链模式">责任链模式</h1>
+<p>责任链模式是一种创建处理对象序列（比如操作序列）的通用方案。一个处理对象可能需要在完成一些工作之后，将结果传递给另一个对象，这个对象接着做一些工作，再转交给下一个处理对象，以此类推。</p>
+
+<p>传统的方式需要在类中设置 successor 并手工设置，然后从第一个 Handler 开始调用，如下所示</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+</pre></td><td class="rouge-code"><pre><span class="c1">//定义代表处理对象的抽象类 ProcessingObject</span>
+<span class="kd">static</span> <span class="kd">private</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">ProcessingObject</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="o">{</span>
+        <span class="kd">protected</span> <span class="n">ProcessingObject</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">successor</span><span class="o">;</span>
+
+        <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setSuccessor</span><span class="o">(</span><span class="n">ProcessingObject</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">successor</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">this</span><span class="o">.</span><span class="na">successor</span> <span class="o">=</span> <span class="n">successor</span><span class="o">;</span>
+        <span class="o">}</span>
+
+        <span class="kd">public</span> <span class="n">T</span> <span class="nf">handle</span><span class="o">(</span><span class="n">T</span> <span class="n">input</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">T</span> <span class="n">r</span> <span class="o">=</span> <span class="n">handleWork</span><span class="o">(</span><span class="n">input</span><span class="o">);</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">successor</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                <span class="k">return</span> <span class="n">successor</span><span class="o">.</span><span class="na">handle</span><span class="o">(</span><span class="n">r</span><span class="o">);</span>
+            <span class="o">}</span>
+            <span class="k">return</span> <span class="n">r</span><span class="o">;</span>
+        <span class="o">}</span>
+
+        <span class="kd">abstract</span> <span class="kd">protected</span> <span class="n">T</span> <span class="nf">handleWork</span><span class="o">(</span><span class="n">T</span> <span class="n">input</span><span class="o">);</span>
+    <span class="o">}</span>
+    
+<span class="c1">//具体类1</span>
+<span class="kd">static</span> <span class="kd">private</span> <span class="kd">class</span> <span class="nc">HeaderTextProcessing</span>
+            <span class="kd">extends</span> <span class="n">ProcessingObject</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="o">{</span>
+        <span class="kd">public</span> <span class="n">String</span> <span class="nf">handleWork</span><span class="o">(</span><span class="n">String</span> <span class="n">text</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">return</span> <span class="s">"From Raoul, Mario and Alan: "</span> <span class="o">+</span> <span class="n">text</span><span class="o">;</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+    
+<span class="c1">//具体类2</span>
+<span class="kd">static</span> <span class="kd">private</span> <span class="kd">class</span> <span class="nc">SpellCheckerProcessing</span>
+            <span class="kd">extends</span> <span class="n">ProcessingObject</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="o">{</span>
+        <span class="kd">public</span> <span class="n">String</span> <span class="nf">handleWork</span><span class="o">(</span><span class="n">String</span> <span class="n">text</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">return</span> <span class="n">text</span><span class="o">.</span><span class="na">replaceAll</span><span class="o">(</span><span class="s">"labda"</span><span class="o">,</span> <span class="s">"lambda"</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="c1">//手工设置并调用</span>
+<span class="n">ProcessingObject</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">p1</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HeaderTextProcessing</span><span class="o">();</span>
+        <span class="n">ProcessingObject</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">p2</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SpellCheckerProcessing</span><span class="o">();</span>
+        <span class="n">p1</span><span class="o">.</span><span class="na">setSuccessor</span><span class="o">(</span><span class="n">p2</span><span class="o">);</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>现在可以将处理对象作为函数的一个实例，如下所示</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre> <span class="n">UnaryOperator</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">headerProcessing</span> <span class="o">=</span>
+                <span class="o">(</span><span class="n">String</span> <span class="n">text</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="s">"From Raoul, Mario and Alan: "</span> <span class="o">+</span> <span class="n">text</span><span class="o">;</span>
+        <span class="n">UnaryOperator</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">spellCheckerProcessing</span> <span class="o">=</span>
+                <span class="o">(</span><span class="n">String</span> <span class="n">text</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">text</span><span class="o">.</span><span class="na">replaceAll</span><span class="o">(</span><span class="s">"labda"</span><span class="o">,</span> <span class="s">"lambda"</span><span class="o">);</span>
+        <span class="n">Function</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="n">pipeline</span> <span class="o">=</span> <span class="n">headerProcessing</span><span class="o">.</span><span class="na">andThen</span><span class="o">(</span><span class="n">spellCheckerProcessing</span><span class="o">);</span>
+        <span class="n">String</span> <span class="n">result2</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="na">apply</span><span class="o">(</span><span class="s">"Aren't labdas really sexy?!!"</span><span class="o">);</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">result2</span><span class="o">);</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<h1 id="观察者模式">观察者模式</h1>
+<p>某些事件发生时（比如状态转变），如果一个对象（通常我们称之为主题）需要自动地通知其他多个对象（称为观察者），就会采用该方案。在 GUI 设计中中很常用（类似 I/O 中的事件通知，当然，你也可以使用轮询也就是 <code class="highlighter-rouge">While(true){...}</code>来实现，这在 I/O 中对应同步阻塞），比如，按下按钮，触发某事件。在这个过程中，Subject 对应按钮，他告知观察者“我被按下啦”，然后观察者通知所有的具体观察者，让他们去处理具体的业务逻辑。
+从而，观察者模式可以分为三部分，Subject、Observer和concreteObserver。其中，Subject的子类实现如下</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre></td><td class="rouge-code"><pre><span class="kd">static</span> <span class="kd">private</span> <span class="kd">class</span> <span class="nc">Feed</span> <span class="kd">implements</span> <span class="n">Subject</span><span class="o">{</span>
+        <span class="kd">private</span> <span class="kd">final</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">Observer</span><span class="o">&gt;</span> <span class="n">observers</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;&gt;();</span>
+        <span class="kd">public</span> <span class="kt">void</span> <span class="nf">registerObserver</span><span class="o">(</span><span class="n">Observer</span> <span class="n">o</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">this</span><span class="o">.</span><span class="na">observers</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">o</span><span class="o">);</span>
+        <span class="o">}</span>
+        <span class="kd">public</span> <span class="kt">void</span> <span class="nf">notifyObservers</span><span class="o">(</span><span class="n">String</span> <span class="n">tweet</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">observers</span><span class="o">.</span><span class="na">forEach</span><span class="o">(</span><span class="n">o</span> <span class="o">-&gt;</span> <span class="n">o</span><span class="o">.</span><span class="na">inform</span><span class="o">(</span><span class="n">tweet</span><span class="o">));</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="n">Feed</span> <span class="n">f</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Feed</span><span class="o">();</span>
+        <span class="n">f</span><span class="o">.</span><span class="na">registerObserver</span><span class="o">(</span><span class="k">new</span> <span class="n">NYTimes</span><span class="o">());</span>
+        <span class="n">f</span><span class="o">.</span><span class="na">registerObserver</span><span class="o">(</span><span class="k">new</span> <span class="n">Guardian</span><span class="o">());</span>
+        <span class="n">f</span><span class="o">.</span><span class="na">registerObserver</span><span class="o">(</span><span class="k">new</span> <span class="n">LeMonde</span><span class="o">());</span>
+        <span class="n">f</span><span class="o">.</span><span class="na">notifyObservers</span><span class="o">(</span><span class="s">"The queen said her favourite book is Java 8 in Action!"</span><span class="o">);</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>这里我们用 foreach 和 Lambda 表达式简化了操作。实际上，我们无需显式地实例化三个观察者对象，直接传递 Lambda 表达式表示需要执行的行为即可：</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+</pre></td><td class="rouge-code"><pre><span class="n">Feed</span> <span class="n">feedLambda</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Feed</span><span class="o">();</span>
+
+        <span class="n">feedLambda</span><span class="o">.</span><span class="na">registerObserver</span><span class="o">((</span><span class="n">String</span> <span class="n">tweet</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="o">{</span>
+            <span class="k">if</span><span class="o">(</span><span class="n">tweet</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">tweet</span><span class="o">.</span><span class="na">contains</span><span class="o">(</span><span class="s">"money"</span><span class="o">)){</span>
+                <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Breaking news in NY! "</span> <span class="o">+</span> <span class="n">tweet</span><span class="o">);</span> <span class="o">}</span>
+        <span class="o">});</span>
+        <span class="n">feedLambda</span><span class="o">.</span><span class="na">registerObserver</span><span class="o">((</span><span class="n">String</span> <span class="n">tweet</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="o">{</span>
+            <span class="k">if</span><span class="o">(</span><span class="n">tweet</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">tweet</span><span class="o">.</span><span class="na">contains</span><span class="o">(</span><span class="s">"queen"</span><span class="o">)){</span>
+                <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Yet another news in London... "</span> <span class="o">+</span> <span class="n">tweet</span><span class="o">);</span> <span class="o">}</span>
+        <span class="o">});</span>
+
+        <span class="n">feedLambda</span><span class="o">.</span><span class="na">notifyObservers</span><span class="o">(</span><span class="s">"Money money money, give me money!"</span><span class="o">);</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<h1 id="总结">总结</h1>
+<p>从上文中我们可以看出，当要执行的动作都很简单时，我们可以通过 Lambda 表达式方便地消除僵化代码，但当逻辑很复杂时，类依然是更有用的方式。</p>
+
+
+                <hr style="visibility: hidden;">
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2019/05/18/%E4%BB%A3%E7%A0%81%E6%95%B4%E6%B4%81%E4%B9%8B%E9%81%93-%E5%AE%9E%E8%B7%B5/" data-toggle="tooltip" data-placement="top" title="代码整洁之道-实践">
+                        Previous<br>
+                        <span>代码整洁之道-实践</span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <hr style="visibility: hidden;">
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                    
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+
+
+<section>
+    
+        <hr class="hidden-sm hidden-xs">
+    
+    <h5><a href="/archive/">FEATURED TAGS</a></h5>
+    <div class="tags">
+        
+        
+        
+        </a>
+        
+        
+                <a data-sort="0005" 
+                    href="/archive/?tag=%E7%AE%97%E6%B3%95"
+                    title="算法"
+                    rel="4">算法</a>
+        
+                <a data-sort="0006" 
+                    href="/archive/?tag=Summary"
+                    title="Summary"
+                    rel="3">Summary</a>
+        
+                <a data-sort="0007" 
+                    href="/archive/?tag=%E5%AE%9E%E8%B7%B5"
+                    title="实践"
+                    rel="2">实践</a>
+        
+                <a data-sort="0007" 
+                    href="/archive/?tag=Clean+Code"
+                    title="Clean Code"
+                    rel="2">Clean Code
+    </div>
+</section>
+
+
+                <!-- Friends Blog -->
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+<!-- add support for mathjax by voleking-->
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "ubiqueadam";
+    var disqus_identifier = "/2019/06/02/使用 Lambda 表达式重构 OO 设计模式";
+    var disqus_url = "http://localhost:4000/2019/06/02/%E4%BD%BF%E7%94%A8-Lambda-%E8%A1%A8%E8%BE%BE%E5%BC%8F%E9%87%8D%E6%9E%84-OO-%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <!-- SNS Link -->
+                
+
+
+<ul class="list-inline text-center">
+
+
+  
+  
+  
+  
+  
+  
+  <li>
+    <a target="_blank" href="https://github.com/ubique0305">
+      <span class="fa-stack fa-lg">
+        <i class="fa fa-circle fa-stack-2x"></i>
+        <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+      </span>
+    </a>
+  </li>
+  
+  
+</ul>
+
+                <p class="copyright text-muted">
+                    Copyright &copy; Ubik Blog 2019
+                    <br>
+                    Powered by <a href="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true">Hux Blog</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/hux-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+
+
+
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-139441319-1';
+    var _gaDomain = 'ubique0305.github.io';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+<!-- Baidu Tongji -->
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if ('' == 'true') {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>
