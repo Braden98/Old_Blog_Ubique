@@ -43,21 +43,21 @@ tags:
     `Optional<Car> optCar = Optional.ofNullable(car);`
 
 ## 使用 map 从 Optional 对象中提取和转换值
-```Java
+```java
 Optional<String> name =
 optInsurance.map(Insurance::getName;
 ```
 ## 使用 flatMap 链接 Optional 对象
 链式调用 map() 根本无法通过编译，原因是 Optional 发生了嵌套，可以使用 flatMap 完成.
-```Java
+```java
 person.flatMap(Person::getCar)  
 .flatMap(Car::getInsurance)  
 .map(Insurance::getName) 
 .orElse("Unknown");
 ```
 ## 无法序列化的 Optional
-Java??的架构师 Brian Goetz曾 经非常明确地??过，Optional的设计初衷仅仅是要支持能返回Optional对象的语法，所以它也并未实现Serializable接口，如果你一定要实现序列化的模型，可以这样做
-```Java
+Java??的架构师 Brian Goetz曾 经非常明确地说过，Optional的设计初衷仅仅是要支持能返回Optional对象的语法，所以它也并未实现Serializable接口，如果你一定要实现序列化的模型，可以这样做
+```java
 public class Person {    
     private Car car;  
     public Optional<Car> getCarAsOptional() {        
