@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="description" content="关于技术与生活，探索与分享 | 丁彪，Programmer,Software Engineer,amateur writer | 这里是 @Ubik丁彪 的个人博客，与你一起发现更大的世界。">
+    <meta name="keywords"  content="丁彪, Ubik丁彪, Ubik, AdamUbik, 丁彪的博客, Ubik Blog, 博客, 个人网站, 互联网, Web, 后端, 架构 ">
+    <meta name="theme-color" content="#000000">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="对象存储的优势及实习问题记录 - 丁彪的博客 | Ubik Blog">
+    
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="对象存储
+“对象存储”来源于英文“Object Storage”或“Object-based Storage”
+
+">
+    
+    <meta property="article:published_time" content="2019-06-14T06:33:14Z">
+    
+    
+    <meta property="article:author" content="Ubik">
+    
+    
+    <meta property="article:tag" content="对象存储">
+    
+    <meta property="article:tag" content="笔记">
+    
+    
+    <meta property="og:image" content="http://localhost:4000/img/avatar-ubik-ny.png">
+    <meta property="og:url" content="http://localhost:4000/2019/06/14/%E5%AF%B9%E8%B1%A1%E5%AD%98%E5%82%A8%E6%8A%80%E6%9C%AF%E5%AD%A6%E4%B9%A0%E5%8F%8AGET-Bucket-(List-Objects)%E6%80%A7%E8%83%BD%E9%97%AE%E9%A2%98/">
+    <meta property="og:site_name" content="丁彪的博客 | Ubik Blog">
+    
+    <title>对象存储的优势及实习问题记录 - 丁彪的博客 | Ubik Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="http://localhost:4000/2019/06/14/%E5%AF%B9%E8%B1%A1%E5%AD%98%E5%82%A8%E6%8A%80%E6%9C%AF%E5%AD%A6%E4%B9%A0%E5%8F%8AGET-Bucket-(List-Objects)%E6%80%A7%E8%83%BD%E9%97%AE%E9%A2%98/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/hux-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Ubik Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    
+                    
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    
+                    
+                    <li>
+                        <a href="/archive/">Archive</a>
+                    </li>
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Image to hack wechat -->
+<!-- <img src="/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="/img/post-bg-universe.jpg" width="0" height="0"> -->
+
+<!-- Post Header -->
+
+
+
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/post-bg-universe.jpg');
+        background: ;
+    }
+
+    
+</style>
+
+<header class="intro-header" >
+
+    <div class="header-mask"></div>
+    
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/archive/?tag=%E5%AF%B9%E8%B1%A1%E5%AD%98%E5%82%A8" title="对象存储">对象存储</a>
+                        
+                        <a class="tag" href="/archive/?tag=%E7%AC%94%E8%AE%B0" title="笔记">笔记</a>
+                        
+                    </div>
+                    <h1>对象存储的优势及实习问题记录</h1>
+                    
+                    <h2 class="subheading">我的定义：REST 式 URL 的文件存储（没有任何必要提及网络，URL本身就有这个意思）</h2>
+                    <span class="meta">Posted by Ubik on June 14, 2019</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+
+
+
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+				<h1 id="对象存储">对象存储</h1>
+<p>“对象存储”来源于英文“Object Storage”或“Object-based Storage”</p>
+
+<h3 id="特性与目标">特性与目标</h3>
+<p>多租户
+不假设数据特征，包括类型，大小等
+存储空间可无限扩展，且性能该随容量水平扩展而线性提升，不然数据量越大，请求越多，性能却不提升，系统的存取性能只会越来越慢
+数据安全
+服务高可靠</p>
+
+<h3 id="索引设计">索引设计</h3>
+<p>顶级命名空间service+bucket即可</p>
+
+<h3 id="元信息">元信息</h3>
+<p>属于哪个存储空间
+类型
+大小
+校验值
+最后修改时间</p>
+
+<h4 id="特殊元信息">特殊元信息</h4>
+<p>演唱者是谁
+作词者是谁
+作曲者是谁
+属于哪张唱片
+属于什么风格</p>
+
+<h1 id="对比">对比</h1>
+<p>传统存储中，块存储暴露Block 文件系统或者网络文件系统如NFS暴露POSIX接口</p>
+<h2 id="das--direct-attached-storage">DAS  Direct-Attached Storage</h2>
+<p>直连式存储。直接连接到某台计算机且其他计算机无法获取，如PC的硬盘驱动器。因为服务器无需通过网络来读写数据，所以DAS能为终端用户提供比网络存储更高的性能。如微软公司推荐使用DAS安装Exchange。
+缺点是依赖服务器主机操作系统进行数据的IO读写和存储维护管理，数据备份和恢复要求占用服务器主机资源（包括CPU、系统IO等）。直连式存储的数据量越大，备份和恢复的时间就越长，对服务器硬件的依赖性和影响就越大。</p>
+
+<h2 id="nas--network-attached-storage">NAS  Network-Attached Storage</h2>
+<p>网络附属存储/网络接入存储
+简单说就是连接在网络上，具备资料存储功能的装置，也因此称为网络存储器。将存储设备与服务器彻底分离，底层磁盘通过文件系统类型（分区，格式化后）通过网络的方式（发送ip包）共享给前端应用</p>
+<h2 id="san-storage-area-network">SAN Storage Area Network</h2>
+<p>存储区域网络
+ 通过光纤设备将存储设别和服务器连接一起，数据和服务器分离，底层磁盘以块的模式共享给前端的应用服务器。
+ SAN是一个采用网状通道（简称FC）技术，通过FC交换机连接存储阵列和服务器主机，建立专用于数据存储的区域网络。
+ <img src="/img/in-post/5E33AC1A918F56A6FFCF48F433A594BF.jpg" alt="插图" /></p>
+
+<h1 id="优势">优势</h1>
+<ul>
+  <li>
+    <p>服务可用性更高
+通过支持对象数据的高可靠性和业务节点的高可靠性网络、节点的多冗余设计，系统设计可用性达到99.99%。</p>
+  </li>
+  <li>
+    <p>数据可靠性更高
+通过提供对象数据多份冗余和保证多份对象的数据一致性自动修复技术来提供对象数据的高可靠性。OBS系统设计的数据持久性高达99.999999999%（11个9），意为对象存储服务里1000亿个用户文件，每月最多只有1个文件发生数据丢失的可能性。</p>
+  </li>
+  <li>
+    <p>用户数据更安全
+用户数据传输到OBS时支持SSL加密，同时，OBS通过AK/SK对访问用户的身份进行鉴权，且结合了ACL、桶策略等多种方式对桶和对象进行访问控制，确保数据传输与访问的安全。此外，用户所上传的对象数据在对象存储服务中分片随机存储在不同硬盘上，所以即便磁盘数据被盗走，也无法将其还原成对象数据。</p>
+  </li>
+  <li>
+    <p>容量无限扩展
+OBS所有业务、存储节点采用分布式集群方式工作，各功能节点、集群都可以独立扩容，整个扩容过程对用户完全透明。用户只需尽情享用云存储带来的无限空间，不必预测未来的存储需求并可以按需要向上和向下扩展，从而大幅提高业务灵活性。</p>
+  </li>
+  <li>
+    <p>维护成本更低
+由于数据存储在OBS中，企业无需招聘专门的存储设备维护人员，设备的维护交由OBS处理即可。</p>
+  </li>
+</ul>
+
+<h1 id="实习问题记录">实习问题记录</h1>
+<h2 id="为什么get-bucket-list-objects在object多时会慢">为什么GET Bucket (List Objects)在Object多时会慢？</h2>
+<p>原问题“get bucket那个接口的实现比较麻烦，在object的量很大的情况下，这个接口的性能会很差。你可以想想这个问题”
+根据API文档所说</p>
+<ol>
+  <li>数据量大，多次循环调用该 API才可获得给定 Prefix 条件的所有对象列表。不像其他API只需要一次Http通信；网络通信次数多，</li>
+  <li>需要模拟文件系统的目录结构，对delimiter划分的相同前缀的多个对象遍历和合并。底层实现需要较深的函数调用栈或者内存空间。</li>
+  <li>Object数量多时更改更频繁，缓存容易失效</li>
+</ol>
+
+<p>不知道元信息的存储系统是否支持事务，如果不支持，并发情况下我觉得会加共享锁（读锁），锁竞争也会带来性能开销。可以用redis、zookeeper做分布式协调组件的情况下，可以多个请求竞争一个锁，只有一个请求到达并被处理，然后更新缓存供其他请求使用，从而提高吞吐量</p>
+
+<p>就是关于 GET Bucket (List Objects)在Object多时性能很差的问题，有没有这几个原因</p>
+<ol>
+  <li>网络IO次数多。根据文档所说，利用marker参数多次迭代调用该 API才可获得给定 Prefix 条件的所有对象列表。</li>
+  <li>计算资源消耗大。文档说支持用delimiter模拟文件系统的目录结构，对delimiter划分的相同前缀的多个对象遍历和合并。这需要较深的函数调用栈或者内存空间以及计算量。</li>
+  <li>保持实时性和一致性带来的开销。如文档所说，缓存容易失效，这会导致更多磁盘IO和数据处理。且读取过程中要加共享锁防止元数据被修改导致的一致性问题。</li>
+</ol>
+
+<p>看文档我觉得服务器应该是一次完成所有数据的处理，但要分段返回是因为数据可能太大吗？</p>
+
+<p>关于处理方法
+文档说因为性能问题不要依赖这个接口的并发调用，而是用户自己缓存数据，这是不是说对数据的准确性要求不太高。那这样后端在并发情况下通过选举其中一个请求到达服务器，从mysql或别的拿到结果放入缓存，其他请求都走缓存，就可以一定程度解决吞吐量的问题。同样，通过elasticsearch或者其他放弃事务机制的搜索方式元数据提高响应速度</p>
+
+<h2 id="q假设现在数据量在单机承受能力之内用mysql来存储元信息怎么处理list请求">Q：“假设现在数据量在单机承受能力之内，用mysql来存储元信息，怎么处理list请求”</h2>
+
+<p>比如按照Zone划分表，表中有所属bucket信息，类型，大小，校验值，最后修改时间，特殊元信息等字段，可以在编程语言层面记录已经处理过的bucket，实现下次根据marker参数继续处理。事务机制（隔离性）可以方便地保证一致性问题，同时可以对marker或其他字段走索引加快IO速度。
+mysql8之后已不自带缓存，如文档所说如果要加缓存可以用redis。同时在编程语言层面利用元信息的最后修改时间字段实现缓存自动更新。</p>
+
+
+
+                <hr style="visibility: hidden;">
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2019/06/14/%E7%94%A8-Optional-%E5%8F%96%E4%BB%A3-null/" data-toggle="tooltip" data-placement="top" title="用 Optional 取代 null 的思考">
+                        Previous<br>
+                        <span>用 Optional 取代 null 的思考</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2019/06/16/RCU/" data-toggle="tooltip" data-placement="top" title="了解并发编程中的RCU">
+                        Next<br>
+                        <span>了解并发编程中的RCU</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+                <hr style="visibility: hidden;">
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                    
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+
+
+<section>
+    
+        <hr class="hidden-sm hidden-xs">
+    
+    <h5><a href="/archive/">FEATURED TAGS</a></h5>
+    <div class="tags">
+        
+        
+        
+        </a>
+        
+        
+                <a data-sort="0023" 
+                    href="/archive/?tag=%E5%B9%B6%E5%8F%91"
+                    title="并发"
+                    rel="4">并发</a>
+        
+                <a data-sort="0020" 
+                    href="/archive/?tag=%E7%AC%94%E8%AE%B0"
+                    title="笔记"
+                    rel="7">笔记</a>
+        
+                <a data-sort="0023" 
+                    href="/archive/?tag=%E7%AE%97%E6%B3%95"
+                    title="算法"
+                    rel="4">算法</a>
+        
+                <a data-sort="0024" 
+                    href="/archive/?tag=%E5%AE%9E%E8%B7%B5"
+                    title="实践"
+                    rel="3">实践</a>
+        
+                <a data-sort="0024" 
+                    href="/archive/?tag=Golang"
+                    title="Golang"
+                    rel="3">Golang</a>
+        
+                <a data-sort="0024" 
+                    href="/archive/?tag=Java"
+                    title="Java"
+                    rel="3">Java</a>
+        
+                <a data-sort="0024" 
+                    href="/archive/?tag=Summary"
+                    title="Summary"
+                    rel="3">Summary</a>
+        
+                <a data-sort="0025" 
+                    href="/archive/?tag=%E5%88%86%E5%B8%83%E5%BC%8F"
+                    title="分布式"
+                    rel="2">分布式</a>
+        
+                <a data-sort="0025" 
+                    href="/archive/?tag=%E9%87%8D%E6%9E%84"
+                    title="重构"
+                    rel="2">重构</a>
+        
+                <a data-sort="0025" 
+                    href="/archive/?tag=Clean+Code"
+                    title="Clean Code"
+                    rel="2">Clean Code</a>
+        
+                <a data-sort="0025" 
+                    href="/archive/?tag=Netty"
+                    title="Netty"
+                    rel="2">Netty
+    </div>
+</section>
+
+
+                <!-- Friends Blog -->
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+<!-- add support for mathjax by voleking-->
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "ubiqueadam";
+    var disqus_identifier = "/2019/06/14/对象存储技术学习及GET Bucket (List Objects)性能问题";
+    var disqus_url = "http://localhost:4000/2019/06/14/%E5%AF%B9%E8%B1%A1%E5%AD%98%E5%82%A8%E6%8A%80%E6%9C%AF%E5%AD%A6%E4%B9%A0%E5%8F%8AGET-Bucket-(List-Objects)%E6%80%A7%E8%83%BD%E9%97%AE%E9%A2%98/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <!-- SNS Link -->
+                
+
+
+<ul class="list-inline text-center">
+
+
+  
+  
+  
+  
+  
+  
+  <li>
+    <a target="_blank" href="https://github.com/ubique0305">
+      <span class="fa-stack fa-lg">
+        <i class="fa fa-circle fa-stack-2x"></i>
+        <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+      </span>
+    </a>
+  </li>
+  
+  
+</ul>
+
+                <p class="copyright text-muted">
+                    Copyright &copy; Ubik Blog 2019
+                    <br>
+                    Powered by <a href="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true">Hux Blog</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/hux-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+
+
+
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-139441319-1';
+    var _gaDomain = 'ubique0305.github.io';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+<!-- Baidu Tongji -->
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if ('' == 'true') {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

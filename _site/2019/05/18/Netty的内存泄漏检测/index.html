@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="description" content="关于技术与生活，探索与分享 | 丁彪，Programmer,Software Engineer,amateur writer | 这里是 @Ubik丁彪 的个人博客，与你一起发现更大的世界。">
+    <meta name="keywords"  content="丁彪, Ubik丁彪, Ubik, AdamUbik, 丁彪的博客, Ubik Blog, 博客, 个人网站, 互联网, Web, 后端, 架构 ">
+    <meta name="theme-color" content="#000000">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Netty 的内存泄漏检测 - 丁彪的博客 | Ubik Blog">
+    
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="自从 Netty 4 开始，对象的生命周期由它们的引用计数( reference counts )管理，而不是由垃圾收集器( garbage collector )管理了。ByteBuf 是最值得注意的，它使用了引用计数来改进分配内存和释放内存的性能。
+
+">
+    
+    <meta property="article:published_time" content="2019-05-18T20:00:00Z">
+    
+    
+    <meta property="article:author" content="Ubik">
+    
+    
+    <meta property="article:tag" content="Netty">
+    
+    <meta property="article:tag" content="内存泄漏">
+    
+    
+    <meta property="og:image" content="http://localhost:4000/img/avatar-ubik-ny.png">
+    <meta property="og:url" content="http://localhost:4000/2019/05/18/Netty%E7%9A%84%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E6%A3%80%E6%B5%8B/">
+    <meta property="og:site_name" content="丁彪的博客 | Ubik Blog">
+    
+    <title>Netty 的内存泄漏检测 - 丁彪的博客 | Ubik Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="http://localhost:4000/2019/05/18/Netty%E7%9A%84%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E6%A3%80%E6%B5%8B/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/hux-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Ubik Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    
+                    
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    
+                    
+                    <li>
+                        <a href="/archive/">Archive</a>
+                    </li>
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Image to hack wechat -->
+<!-- <img src="/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="/img/post-bg-2015.jpg" width="0" height="0"> -->
+
+<!-- Post Header -->
+
+
+
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/post-bg-2015.jpg');
+        background: ;
+    }
+
+    
+</style>
+
+<header class="intro-header" >
+
+    <div class="header-mask"></div>
+    
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/archive/?tag=Netty" title="Netty">Netty</a>
+                        
+                        <a class="tag" href="/archive/?tag=%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F" title="内存泄漏">内存泄漏</a>
+                        
+                    </div>
+                    <h1>Netty 的内存泄漏检测</h1>
+                    
+                    <h2 class="subheading">拒绝GC，而是细粒度的引用计数器</h2>
+                    <span class="meta">Posted by Ubik on May 18, 2019</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+
+
+
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+				<p>自从 Netty 4 开始，对象的生命周期由它们的引用计数( reference counts )管理，而不是由垃圾收集器( garbage collector )管理了。ByteBuf 是最值得注意的，它使用了引用计数来改进分配内存和释放内存的性能。</p>
+
+<h1 id="referencecounted">ReferenceCounted</h1>
+<p>在 Netty 中，通过 io.netty.util.ReferenceCounted 接口，定义了引用计数相关的一系列操作。代码如下：</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+</pre></td><td class="rouge-code"><pre><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">ReferenceCounted</span> <span class="o">{</span>
+
+    <span class="cm">/**
+     * 获得引用计数
+     *
+     * Returns the reference count of this object.  If {@code 0}, it means this object has been deallocated.
+     */</span>
+    <span class="kt">int</span> <span class="nf">refCnt</span><span class="o">();</span>
+
+    <span class="cm">/**
+     * 增加引用计数 1
+     *
+     * Increases the reference count by {@code 1}.
+     */</span>
+    <span class="n">ReferenceCounted</span> <span class="nf">retain</span><span class="o">();</span>
+    <span class="cm">/**
+     * 增加引用计数 n
+     *
+     * Increases the reference count by the specified {@code increment}.
+     */</span>
+    <span class="n">ReferenceCounted</span> <span class="nf">retain</span><span class="o">(</span><span class="kt">int</span> <span class="n">increment</span><span class="o">);</span>
+
+    <span class="cm">/**
+     * 等价于调用 `#touch(null)` 方法，即 hint 方法参数传递为 null 。
+     *
+     * Records the current access location of this object for debugging purposes.
+     * If this object is determined to be leaked, the information recorded by this operation will be provided to you
+     * via {@link ResourceLeakDetector}.  This method is a shortcut to {@link #touch(Object) touch(null)}.
+     */</span>
+    <span class="n">ReferenceCounted</span> <span class="nf">touch</span><span class="o">();</span>
+    <span class="cm">/**
+     * 出于调试目的,用一个额外的任意的(arbitrary)信息记录这个对象的当前访问地址. 如果这个对象被检测到泄露了, 这个操作记录的信息将通过ResourceLeakDetector 提供.
+     *
+     * Records the current access location of this object with an additional arbitrary information for debugging
+     * purposes.  If this object is determined to be leaked, the information recorded by this operation will be
+     * provided to you via {@link ResourceLeakDetector}.
+     */</span>
+    <span class="n">ReferenceCounted</span> <span class="nf">touch</span><span class="o">(</span><span class="n">Object</span> <span class="n">hint</span><span class="o">);</span>
+
+    <span class="cm">/**
+     * 减少引用计数 1 。
+     * 当引用计数为 0 时，释放
+     *
+     * Decreases the reference count by {@code 1} and deallocates this object if the reference count reaches at
+     * {@code 0}.
+     *
+     * @return {@code true} if and only if the reference count became {@code 0} and this object has been deallocated
+     */</span>
+    <span class="kt">boolean</span> <span class="nf">release</span><span class="o">();</span>
+    <span class="cm">/**
+     * 减少引用计数 n 。
+     *  当引用计数为 0 时，释放
+     *
+     * Decreases the reference count by the specified {@code decrement} and deallocates this object if the reference
+     * count reaches at {@code 0}.
+     *
+     * @return {@code true} if and only if the reference count became {@code 0} and this object has been deallocated
+     */</span>
+    <span class="kt">boolean</span> <span class="nf">release</span><span class="o">(</span><span class="kt">int</span> <span class="n">decrement</span><span class="o">);</span>
+<span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>refCnt()、retain(…)、release(…) 三种方法比较好理解，对引用指数的获取与增减。
+touch(…) 方法，主动记录一个 hint 给 ResourceLeakDetector ，方便我们在发现内存泄露有更多的信息进行排查。</p>
+
+<p>ReferenceCounted 的直接子类 / 子接口有两个 ：</p>
+
+<p><code class="highlighter-rouge">io.netty.buffer.ByteBuf</code> 。所以，所有 ByteBuf 实现类，都支持引用计数的操作。
+<code class="highlighter-rouge">io.netty.util.AbstractReferenceCounted</code> ，ReferenceCounted 的抽象实现类。它的子类实现类，主要是除了 ByteBuf 之外，需要引用计数的操作的类。例如：AbstractHttpData、DefaultFileRegion 等等。</p>
+
+<h1 id="bytebuf">ByteBuf</h1>
+<p>ByteBuf 虽然继承了 ReferenceCounted 接口，但是并未实现相应的方法。而是实现了如下接口</p>
+<ul>
+  <li>
+    <p>AbstractReferenceCountedByteBuf ，实现引用计数的获取与增减的操作。</p>
+  </li>
+  <li>WrappedByteBuf ，实现对 ByteBuf 的装饰器实现类。</li>
+  <li>WrappedCompositeByteBuf ，实现对 CompositeByteBuf 的装饰器实现类。</li>
+  <li>SimpleLeakAwareByteBuf、SimpleLeakAwareCompositeByteBuf ，实现了 SIMPLE 级别的内存泄露检测。</li>
+  <li>AdvancedLeakAwareByteBuf、AdvancedLeakAwareCompositeByteBuf ，实现了 ADVANCED 和 PARANOID 级别的内存泄露检测。</li>
+  <li>UnreleasableByteBuf ，用于阻止他人对装饰的 ByteBuf 的销毁，避免被错误销毁掉。</li>
+</ul>
+
+<h2 id="创建-leakaware-bytebuf-对象">创建 LeakAware ByteBuf 对象</h2>
+<p>ByteBufAllocator 可用于创建 ByteBuf 对象。创建的过程中，它会调用 #toLeakAwareBuffer(…) 方法，将 ByteBuf 装饰成 LeakAware ( 可检测内存泄露 )的 ByteBuf 对象，代码如下：</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+</pre></td><td class="rouge-code"><pre><span class="c1">// AbstractByteBufAllocator.java</span>
+<span class="kd">protected</span> <span class="kd">static</span> <span class="n">ByteBuf</span> <span class="nf">toLeakAwareBuffer</span><span class="o">(</span><span class="n">ByteBuf</span> <span class="n">buf</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">ResourceLeakTracker</span><span class="o">&lt;</span><span class="n">ByteBuf</span><span class="o">&gt;</span> <span class="n">leak</span><span class="o">;</span>
+    <span class="k">switch</span> <span class="o">(</span><span class="n">ResourceLeakDetector</span><span class="o">.</span><span class="na">getLevel</span><span class="o">())</span> <span class="o">{</span>
+        <span class="k">case</span> <span class="nl">SIMPLE:</span>
+            <span class="n">leak</span> <span class="o">=</span> <span class="n">AbstractByteBuf</span><span class="o">.</span><span class="na">leakDetector</span><span class="o">.</span><span class="na">track</span><span class="o">(</span><span class="n">buf</span><span class="o">);</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">leak</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">buf</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SimpleLeakAwareByteBuf</span><span class="o">(</span><span class="n">buf</span><span class="o">,</span> <span class="n">leak</span><span class="o">);</span>
+            <span class="o">}</span>
+            <span class="k">break</span><span class="o">;</span>
+        <span class="k">case</span> <span class="nl">ADVANCED:</span>
+        <span class="k">case</span> <span class="nl">PARANOID:</span>
+            <span class="n">leak</span> <span class="o">=</span> <span class="n">AbstractByteBuf</span><span class="o">.</span><span class="na">leakDetector</span><span class="o">.</span><span class="na">track</span><span class="o">(</span><span class="n">buf</span><span class="o">);</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">leak</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">buf</span> <span class="o">=</span> <span class="k">new</span> <span class="n">AdvancedLeakAwareByteBuf</span><span class="o">(</span><span class="n">buf</span><span class="o">,</span> <span class="n">leak</span><span class="o">);</span>
+            <span class="o">}</span>
+            <span class="k">break</span><span class="o">;</span>
+        <span class="k">default</span><span class="o">:</span>
+            <span class="k">break</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="n">buf</span><span class="o">;</span>
+<span class="o">}</span>
+
+<span class="kd">protected</span> <span class="kd">static</span> <span class="n">CompositeByteBuf</span> <span class="nf">toLeakAwareBuffer</span><span class="o">(</span><span class="n">CompositeByteBuf</span> <span class="n">buf</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">ResourceLeakTracker</span><span class="o">&lt;</span><span class="n">ByteBuf</span><span class="o">&gt;</span> <span class="n">leak</span><span class="o">;</span>
+    <span class="k">switch</span> <span class="o">(</span><span class="n">ResourceLeakDetector</span><span class="o">.</span><span class="na">getLevel</span><span class="o">())</span> <span class="o">{</span>
+        <span class="k">case</span> <span class="nl">SIMPLE:</span>
+            <span class="n">leak</span> <span class="o">=</span> <span class="n">AbstractByteBuf</span><span class="o">.</span><span class="na">leakDetector</span><span class="o">.</span><span class="na">track</span><span class="o">(</span><span class="n">buf</span><span class="o">);</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">leak</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">buf</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SimpleLeakAwareCompositeByteBuf</span><span class="o">(</span><span class="n">buf</span><span class="o">,</span> <span class="n">leak</span><span class="o">);</span>
+            <span class="o">}</span>
+            <span class="k">break</span><span class="o">;</span>
+        <span class="k">case</span> <span class="nl">ADVANCED:</span>
+        <span class="k">case</span> <span class="nl">PARANOID:</span>
+            <span class="n">leak</span> <span class="o">=</span> <span class="n">AbstractByteBuf</span><span class="o">.</span><span class="na">leakDetector</span><span class="o">.</span><span class="na">track</span><span class="o">(</span><span class="n">buf</span><span class="o">);</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">leak</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">buf</span> <span class="o">=</span> <span class="k">new</span> <span class="n">AdvancedLeakAwareCompositeByteBuf</span><span class="o">(</span><span class="n">buf</span><span class="o">,</span> <span class="n">leak</span><span class="o">);</span>
+            <span class="o">}</span>
+            <span class="k">break</span><span class="o">;</span>
+        <span class="k">default</span><span class="o">:</span>
+            <span class="k">break</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="n">buf</span><span class="o">;</span>
+<span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<ol>
+  <li>有两个 #toLeakAwareBuffer(…) 方法，分别对应带 “Composite” 的 组合 ByteBuf 类，和不带 Composite 普通 ByteBuf 类。因为这个不同，所以前者创建的是 SimpleLeakAwareCompositeByteBuf / AdvancedLeakAwareCompositeByteBuf 对象，后者创建的是 SimpleLeakAwareByteBuf / AdvancedLeakAwareByteBuf 对象。</li>
+  <li>当然，从总的逻辑来看，是一致的：
+    <ul>
+      <li>SIMPLE 级别，创建 SimpleLeakAwareByteBuf 或 SimpleLeakAwareCompositeByteBuf 对象。</li>
+      <li>ADVANCED 和 PARANOID 级别，创建 AdvancedLeakAwareByteBuf 或者 AdvancedLeakAwareCompositeByteBuf 对象。</li>
+    </ul>
+  </li>
+  <li>是否需要创建 LeakAware ByteBuf 对象，有一个前提，调用 ResourceLeakDetector#track(ByteBuf) 方法，返回了 ResourceLeakTracker 对象。
+    <ul>
+      <li>虽然说， ADVANCED 和 PARANOID 级别，都使用了 AdvancedLeakAwareByteBuf 或 AdvancedLeakAwareCompositeByteBuf 对象，但是它们的差异是：
+        <ul>
+          <li>PARANOID 级别，一定返回 ResourceLeakTracker 对象；</li>
+          <li>ADVANCED 级别，随机概率( 默认为 1% 左右 )返回 ResourceLeakTracker 对象。</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ol>
+
+<h2 id="abstractreferencecountedbytebuf">AbstractReferenceCountedByteBuf</h2>
+<p><code class="highlighter-rouge">io.netty.buffer.AbstractReferenceCountedByteBuf</code> ，实现引用计数的获取与增减的操作。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+</pre></td><td class="rouge-code"><pre><span class="cm">/**
+ * {@link #refCnt} 的更新器
+ */</span>
+<span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">AtomicIntegerFieldUpdater</span><span class="o">&lt;</span><span class="n">AbstractReferenceCountedByteBuf</span><span class="o">&gt;</span> <span class="n">refCntUpdater</span> <span class="o">=</span> <span class="n">AtomicIntegerFieldUpdater</span><span class="o">.</span><span class="na">newUpdater</span><span class="o">(</span><span class="n">AbstractReferenceCountedByteBuf</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">"refCnt"</span><span class="o">);</span>
+
+<span class="cm">/**
+ * 引用计数
+ */</span>
+<span class="kd">private</span> <span class="kd">volatile</span> <span class="kt">int</span> <span class="n">refCnt</span><span class="o">;</span>
+
+<span class="kd">protected</span> <span class="nf">AbstractReferenceCountedByteBuf</span><span class="o">(</span><span class="kt">int</span> <span class="n">maxCapacity</span><span class="o">)</span> <span class="o">{</span>
+    <span class="c1">// 设置最大容量</span>
+    <span class="kd">super</span><span class="o">(</span><span class="n">maxCapacity</span><span class="o">);</span>
+    <span class="c1">// 初始 refCnt 为 1</span>
+    <span class="n">refCntUpdater</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="mi">1</span><span class="o">);</span>
+<span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>计数器基于 AtomicIntegerFieldUpdater ，为什么不直接用 AtomicInteger ？因为 ByteBuf 对象很多，如果都把 int 包一层 AtomicInteger 花销较大，而AtomicIntegerFieldUpdater 只需要一个全局的静态变量。</p>
+
+<h2 id="simpleleakawarebytebuf">SimpleLeakAwareByteBuf</h2>
+<p><code class="highlighter-rouge">io.netty.buffer.SimpleLeakAwareByteBuf</code> ，继承 WrappedByteBuf 类，Simple 级别的 LeakAware ByteBuf 实现类。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+</pre></td><td class="rouge-code"><pre><span class="cm">/**
+ * 关联的 ByteBuf 对象
+ *
+ * This object's is associated with the {@link ResourceLeakTracker}. When {@link ResourceLeakTracker#close(Object)}
+ * is called this object will be used as the argument. It is also assumed that this object is used when
+ * {@link ResourceLeakDetector#track(Object)} is called to create {@link #leak}.
+ */</span>
+<span class="kd">private</span> <span class="kd">final</span> <span class="n">ByteBuf</span> <span class="n">trackedByteBuf</span><span class="o">;</span>
+<span class="cm">/**
+ * ResourceLeakTracker 对象
+ */</span>
+<span class="kd">final</span> <span class="n">ResourceLeakTracker</span><span class="o">&lt;</span><span class="n">ByteBuf</span><span class="o">&gt;</span> <span class="n">leak</span><span class="o">;</span>
+
+<span class="n">SimpleLeakAwareByteBuf</span><span class="o">(</span><span class="n">ByteBuf</span> <span class="n">wrapped</span><span class="o">,</span> <span class="n">ByteBuf</span> <span class="n">trackedByteBuf</span><span class="o">,</span> <span class="n">ResourceLeakTracker</span><span class="o">&lt;</span><span class="n">ByteBuf</span><span class="o">&gt;</span> <span class="n">leak</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// &lt;2&gt;</span>
+    <span class="kd">super</span><span class="o">(</span><span class="n">wrapped</span><span class="o">);</span>
+    <span class="k">this</span><span class="o">.</span><span class="na">trackedByteBuf</span> <span class="o">=</span> <span class="n">ObjectUtil</span><span class="o">.</span><span class="na">checkNotNull</span><span class="o">(</span><span class="n">trackedByteBuf</span><span class="o">,</span> <span class="s">"trackedByteBuf"</span><span class="o">);</span>
+    <span class="k">this</span><span class="o">.</span><span class="na">leak</span> <span class="o">=</span> <span class="n">ObjectUtil</span><span class="o">.</span><span class="na">checkNotNull</span><span class="o">(</span><span class="n">leak</span><span class="o">,</span> <span class="s">"leak"</span><span class="o">);</span>
+<span class="o">}</span>
+
+<span class="n">SimpleLeakAwareByteBuf</span><span class="o">(</span><span class="n">ByteBuf</span> <span class="n">wrapped</span><span class="o">,</span> <span class="n">ResourceLeakTracker</span><span class="o">&lt;</span><span class="n">ByteBuf</span><span class="o">&gt;</span> <span class="n">leak</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// &lt;1&gt;</span>
+    <span class="k">this</span><span class="o">(</span><span class="n">wrapped</span><span class="o">,</span> <span class="n">wrapped</span><span class="o">,</span> <span class="n">leak</span><span class="o">);</span>
+<span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>leak 属性，ResourceLeakTracker 对象。
+trackedByteBuf 属性，真正关联 leak 的 ByteBuf 对象。
+对于构造方法 &lt;1&gt; ，wrapped 和 trackedByteBuf 相同。
+对于构造方法 &lt;2&gt; ，wrapped 和 trackedByteBuf 一般不同。</p>
+
+<h1 id="resourceleakdetector-内存泄露检测器">ResourceLeakDetector 内存泄露检测器</h1>
+<p>ResourceLeakDetector 为了检测内存是否泄漏，使用了 WeakReference( 弱引用 )和 ReferenceQueue( 引用队列 )，过程如下：</p>
+
+<ol>
+  <li>根据检测级别和采样率的设置，在需要时为需要检测的 ByteBuf 创建WeakReference 引用。</li>
+  <li>当 JVM 回收掉 ByteBuf 对象时，JVM 会将 WeakReference 放入ReferenceQueue 队列中。</li>
+  <li>通过对 ReferenceQueue 中 WeakReference 的检查，判断在 GC 前是否有释放ByteBuf 的资源，就可以知道是否有资源释放。</li>
+</ol>
+
+<p>该类中枚举了4个内存泄漏等级，默认级别为 DEFAULT_LEVEL = Level.SIMPLE 。
+四个等级如下</p>
+<ol>
+  <li>
+    <p>禁用（DISABLED） - 完全禁止泄露检测，省点消耗。</p>
+  </li>
+  <li>简单（SIMPLE） - 默认等级，告诉我们取样的1%的ByteBuf是否发生了泄露，但总共一次只打印一次，看不到就没有了。</li>
+  <li>高级（ADVANCED） - 告诉我们取样的1%的ByteBuf发生泄露的地方。每种类型的泄漏（创建的地方与访问路径一致）只打印一次。对性能有影响。</li>
+  <li>偏执（PARANOID） - 跟高级选项类似，但此选项检测所有ByteBuf，而不仅仅是取样的那1%。对性能有绝大的影响。</li>
+</ol>
+
+<h1 id="defaultresourceleak">DefaultResourceLeak</h1>
+<p>DefaultResourceLeak ，继承 java.lang.ref.WeakReference 类，实现 ResourceLeakTracker 接口，默认 ResourceLeakTracker 实现类。同时，它是 ResourceLeakDetector 内部静态类</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">ResourceLeakDetector</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kd">class</span> <span class="nc">DefaultResourceLeak</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">WeakReference</span><span class="o">&lt;</span><span class="n">Object</span><span class="o">&gt;</span> <span class="kd">implements</span> <span class="n">ResourceLeakTracker</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;,</span> <span class="n">ResourceLeak</span> <span class="o">{</span>
+    <span class="o">}</span>
+
+<span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<h2 id="引用队列reference-queue">引用队列(Reference Queue)</h2>
+<p>一旦弱引用对象开始返回null，该弱引用指向的对象就被标记成了垃圾。而这个弱引用对象（非其指向的对象）就没有什么用了。通常这时候需要进行一些清理工作。比如WeakHashMap会在这时候移除没用的条目来避免保存无限制增长的没有意义的弱引用。
+引用队列可以很容易地实现跟踪不需要的引用。当你在构造WeakReference时传入一个ReferenceQueue对象，当该引用指向的对象被标记为垃圾的时候，这个引用对象会自动地加入到引用队列里面。接下来，你就可以在固定的周期，处理传入的引用队列，比如做一些清理工作来处理这些没有用的引用对象。</p>
+
+<p>也就是说，referent 被标记为垃圾的时候，它对应的 WeakReference 对象会被添加到 refQueue 队列中。在此处，即将 DefaultResourceLeak 添加到 referent 队列中。</p>
+
+<h1 id="参考资料">参考资料</h1>
+<ol>
+  <li><a href="https://blog.csdn.net/prestigeding/article/details/54233327">Netty学习之旅—-源码分析Netty内存泄漏检测</a></li>
+  <li><a href="http://calvin1978.blogcn.com/articles/netty-leak.html">Netty之有效规避内存泄漏</a></li>
+</ol>
+
+
+                <hr style="visibility: hidden;">
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2019/05/18/%E4%BB%A3%E7%A0%81%E6%95%B4%E6%B4%81%E4%B9%8B%E9%81%93-%E5%AE%9E%E8%B7%B5/" data-toggle="tooltip" data-placement="top" title="代码整洁之道-实践">
+                        Previous<br>
+                        <span>代码整洁之道-实践</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2019/05/29/JDK%E5%AE%9E%E7%8E%B0%E6%9C%80%E7%AE%80%E5%8D%95%E7%9A%84RPC%E6%A1%86%E6%9E%B6/" data-toggle="tooltip" data-placement="top" title="Java 实现最简单的RPC框架">
+                        Next<br>
+                        <span>Java 实现最简单的RPC框架</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+                <hr style="visibility: hidden;">
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                    
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+
+
+<section>
+    
+        <hr class="hidden-sm hidden-xs">
+    
+    <h5><a href="/archive/">FEATURED TAGS</a></h5>
+    <div class="tags">
+        
+        
+        
+        </a>
+        
+        
+                <a data-sort="0023" 
+                    href="/archive/?tag=%E5%B9%B6%E5%8F%91"
+                    title="并发"
+                    rel="4">并发</a>
+        
+                <a data-sort="0020" 
+                    href="/archive/?tag=%E7%AC%94%E8%AE%B0"
+                    title="笔记"
+                    rel="7">笔记</a>
+        
+                <a data-sort="0023" 
+                    href="/archive/?tag=%E7%AE%97%E6%B3%95"
+                    title="算法"
+                    rel="4">算法</a>
+        
+                <a data-sort="0024" 
+                    href="/archive/?tag=%E5%AE%9E%E8%B7%B5"
+                    title="实践"
+                    rel="3">实践</a>
+        
+                <a data-sort="0024" 
+                    href="/archive/?tag=Golang"
+                    title="Golang"
+                    rel="3">Golang</a>
+        
+                <a data-sort="0024" 
+                    href="/archive/?tag=Java"
+                    title="Java"
+                    rel="3">Java</a>
+        
+                <a data-sort="0024" 
+                    href="/archive/?tag=Summary"
+                    title="Summary"
+                    rel="3">Summary</a>
+        
+                <a data-sort="0025" 
+                    href="/archive/?tag=%E5%88%86%E5%B8%83%E5%BC%8F"
+                    title="分布式"
+                    rel="2">分布式</a>
+        
+                <a data-sort="0025" 
+                    href="/archive/?tag=%E9%87%8D%E6%9E%84"
+                    title="重构"
+                    rel="2">重构</a>
+        
+                <a data-sort="0025" 
+                    href="/archive/?tag=Clean+Code"
+                    title="Clean Code"
+                    rel="2">Clean Code</a>
+        
+                <a data-sort="0025" 
+                    href="/archive/?tag=Netty"
+                    title="Netty"
+                    rel="2">Netty
+    </div>
+</section>
+
+
+                <!-- Friends Blog -->
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+<!-- add support for mathjax by voleking-->
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "ubiqueadam";
+    var disqus_identifier = "/2019/05/18/Netty的内存泄漏检测";
+    var disqus_url = "http://localhost:4000/2019/05/18/Netty%E7%9A%84%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E6%A3%80%E6%B5%8B/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <!-- SNS Link -->
+                
+
+
+<ul class="list-inline text-center">
+
+
+  
+  
+  
+  
+  
+  
+  <li>
+    <a target="_blank" href="https://github.com/ubique0305">
+      <span class="fa-stack fa-lg">
+        <i class="fa fa-circle fa-stack-2x"></i>
+        <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+      </span>
+    </a>
+  </li>
+  
+  
+</ul>
+
+                <p class="copyright text-muted">
+                    Copyright &copy; Ubik Blog 2019
+                    <br>
+                    Powered by <a href="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true">Hux Blog</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/hux-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+
+
+
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-139441319-1';
+    var _gaDomain = 'ubique0305.github.io';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+<!-- Baidu Tongji -->
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if ('' == 'true') {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

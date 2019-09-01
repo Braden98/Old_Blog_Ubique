@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="description" content="关于技术与生活，探索与分享 | 丁彪，Programmer,Software Engineer,amateur writer | 这里是 @Ubik丁彪 的个人博客，与你一起发现更大的世界。">
+    <meta name="keywords"  content="丁彪, Ubik丁彪, Ubik, AdamUbik, 丁彪的博客, Ubik Blog, 博客, 个人网站, 互联网, Web, 后端, 架构 ">
+    <meta name="theme-color" content="#000000">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="分布式事务的原理与实现 - 丁彪的博客 | Ubik Blog">
+    
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="看《从 Paxos 到 Zookeeper》看的很爽，于是在 唯一了解的 CAP 和选举问题之外，系统地整理了分布式事务的相关问题。
+个人理解
+分布式事务就是指事务的参与者、支持事务的服务器、资源服务器以及事务管理器分别位于不同的分布式系统的不同节点之上。简单的说，就是一次大的操作由不同的小操作组成，这些小的操作分布在不同的服务器上，且属于不同的应用，分布式事务需要保证这些小操作要么全部成功...">
+    
+    <meta property="article:published_time" content="2019-07-14T06:33:14Z">
+    
+    
+    <meta property="article:author" content="Ubik">
+    
+    
+    <meta property="article:tag" content="分布式">
+    
+    <meta property="article:tag" content="笔记">
+    
+    
+    <meta property="og:image" content="http://localhost:4000/img/avatar-ubik-ny.png">
+    <meta property="og:url" content="http://localhost:4000/2019/07/14/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E7%9A%84%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
+    <meta property="og:site_name" content="丁彪的博客 | Ubik Blog">
+    
+    <title>分布式事务的原理与实现 - 丁彪的博客 | Ubik Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="http://localhost:4000/2019/07/14/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E7%9A%84%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/hux-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Ubik Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    
+                    
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    
+                    
+                    <li>
+                        <a href="/archive/">Archive</a>
+                    </li>
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Image to hack wechat -->
+<!-- <img src="/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="/img/post-bg-css.jpg" width="0" height="0"> -->
+
+<!-- Post Header -->
+
+
+
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/post-bg-css.jpg');
+        background: ;
+    }
+
+    
+</style>
+
+<header class="intro-header" >
+
+    <div class="header-mask"></div>
+    
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/archive/?tag=%E5%88%86%E5%B8%83%E5%BC%8F" title="分布式">分布式</a>
+                        
+                        <a class="tag" href="/archive/?tag=%E7%AC%94%E8%AE%B0" title="笔记">笔记</a>
+                        
+                    </div>
+                    <h1>分布式事务的原理与实现</h1>
+                    
+                    <h2 class="subheading">CAP 的论文读起来特酸爽，但结论很好记</h2>
+                    <span class="meta">Posted by Ubik on July 14, 2019</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+
+
+
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+				<p>看《从 Paxos 到 Zookeeper》看的很爽，于是在 唯一了解的 CAP 和选举问题之外，系统地整理了分布式事务的相关问题。</p>
+<h2 id="个人理解">个人理解</h2>
+<p>分布式事务就是指事务的参与者、支持事务的服务器、资源服务器以及事务管理器分别位于不同的分布式系统的不同节点之上。简单的说，就是一次大的操作由不同的小操作组成，这些小的操作分布在不同的服务器上，且属于不同的应用，分布式事务需要保证这些小操作要么全部成功，要么全部失败。本质上来说，分布式事务就是为了保证不同数据库的数据一致性。</p>
+
+<p>换句话说，分布式事务 = n 个本地事务。通过事务管理器，达到 n 个本地事务要么全部成功，要么全部失败。</p>
+
+<h2 id="出现原因">出现原因</h2>
+<p>一句话：单机装不下了(……)至于是数据量太大还是为了性能或者计算能力，下边慢慢说。
+举世闻名（……）的微服务就是把一个项目整体拆分成由不同事务组成的模块，显然不同的模块分布在不同的逻辑块上。
+举个例子，一个公司之内，用户的资产可能分为好多个部分，比如余额，积分，优惠券等等。在公司内部有可能积分功能由一个微服务团队维护，优惠券又是另外的团队维护。
+这样的话就无法保证积分扣减了之后，优惠券能否扣减成功。
+另一个原因是数据库要做分库分表。当然从实际角度考虑，在千万量级之前，做数据库的分库分表并不是什么好主意。
+但即使不这样，NoSQL 自带的分布式特性使得常用来做缓存的 Redis 也需要使用者了解一定的分布式知识（这句话很绕，但词法和语法分析都没问题，哈哈）</p>
+
+<h1 id="基础知识">基础知识</h1>
+<p>数据库的 ACID 满足了数据库本地事务的基础，但是它无法满足分布式事务，这个时候衍生了 CAP 和 BASE 两个经典理论。</p>
+<h1 id="cap">CAP</h1>
+<p>CAP 理论</p>
+
+<p>CAP 定理，又被叫作布鲁尔定理。对于设计分布式系统来说(不仅仅是分布式事务)的架构师来说，CAP 就是你的入门理论。</p>
+
+<ul>
+  <li>
+    <p>C (一致性)：在分布式系统中的所有数据备份，在同一时刻是否同样的值。（等同于所有节点访问同一份最新的数据副本）</p>
+  </li>
+  <li>A (可用性)：在集群中一部分节点故障后，集群整体是否还能响应客户端的读写请求。（对数据更新具备高可用性）</li>
+  <li>P (分区容错性)：以实际效果而言，分区相当于对通信的时限要求。系统如果不能在时限内达成数据一致性，就意味着发生了分区的情况，必须就当前操作在 C 和 A 之间做出选择。</li>
+</ul>
+
+<p>高可用、数据一致性是很多系统设计的目标，但是分区又是不可避免的事情。我们来看一看分别拥有 CA、CP 和 AP 的情况。</p>
+
+<ul>
+  <li>CA without P：如果不要求 P（不允许分区），则 C（强一致性）和A（可用性）是可以保证的。但其实分区不是你想不想的问题，而是始终会存在，因此 CA 的系统更多的是允许分区后各子系统依然保持 CA 。
+    <ul>
+      <li>单机的Oracle或MySQL之类的传统RDBMS数据库没有分区容错，是CA系统，可以达到强一致性和可用性。</li>
+    </ul>
+  </li>
+  <li>CP without A：如果不要求 A（可用），相当于每个请求都需要在 Server 之间强一致，而 P（分区）会导致同步时间无限延长，如此 CP 也是可以保证的。很多传统的数据库分布式事务都属于这种模式。
+    <ul>
+      <li>半同步复制在master写binlog成功之后不立即提交，而是等待其中一个slave同步成功，只要有一个slave同步成功，立即提交。这种方式比异步复制性能稍差（需要等待至少一个slave同步成功才提交），但是在一定程度上保证了数据一致性（依然不是CP系统：如果同步slave2失败，master和slave1在commit之后挂了，slave2对外提供服务，从slave2中无法查询到刚才提交的数据）。</li>
+    </ul>
+
+    <p><img src="/img/in-post/8904178FA8EA0F47AFE1CB749F7E4AD5.jpg" alt="插图" /></p>
+  </li>
+  <li>AP wihtout C：要高可用并允许分区，则需放弃一致性。一旦分区发生，节点之间可能会失去联系，为了高可用，每个节点只能用本地数据提供服务，而这样会导致全局数据的不一致性。现在众多的NoSQL都属于此类。
+    <ul>
+      <li>Mysql 的异步复制在master写binlog成功之后立即提交，不等待slave的同步结果。这种方式有很高的性能，但是牺牲了数据一致性。如果slave同步不成功就会造成master和slave数据不一致。异步复制虽然性能高（A），但是数据有可能不一致（C），所以异步复制是AP系统。</li>
+    </ul>
+
+    <p><img src="/img/in-post/5728A35581B66B735DDC81C3670D02AD.jpg" alt="插图" /></p>
+  </li>
+</ul>
+
+<h2 id="总结如下">总结如下</h2>
+<ul>
+  <li>MySQL 主从异步复制是 AP 系统。</li>
+  <li>MySQL 主从半同步复制是 CP 系统。</li>
+  <li>Zookeeper 是 CP 系统。</li>
+  <li>Redis 主从同步是 AP 系统。</li>
+  <li>Eureka 主从同步是 AP 系统。</li>
+</ul>
+
+<h1 id="base">BASE</h1>
+<p>BASE 是 Basically Available(基本可用)、Soft state(软状态)和 Eventually consistent (最终一致性) 三个短语的缩写。是对 CAP 中AP 的一个扩展</p>
+
+<p>BA 基本可用：分布式系统在出现故障时，允许损失部分可用功能，保证核心功能可用。
+S 软状态：允许系统中存在中间状态，这个状态不影响系统可用性，这里指的是 CAP 中的不一致。
+E 最终一致：最终一致是指经过一段时间后，所有节点数据都将会达到一致。
+BASE 解决了 CAP 中理论没有网络延迟，在 BASE 中用软状态和最终一致，保证了延迟后的一致性。</p>
+
+<p>BASE 和 ACID 是相反的，它完全不同于 ACID 的强一致性模型，而是通过牺牲强一致性来获得可用性，并允许数据在一段时间内是不一致的，但最终达到一致状态。</p>
+
+<p>对于大部分的分布式应用而言，只要数据在规定的时间内达到最终一致性即可。我们可以把符合传统的 ACID 叫做刚性事务，把满足 BASE 理论的最终一致性事务叫做柔性事务。
+具体到分布式事务的实现上，业界主要采用了 XA 协议的强一致规范以及柔性事务的最终一致规范。</p>
+
+<h1 id="实现方案">实现方案</h1>
+<ol>
+  <li>
+    <p>XA 方案</p>
+  </li>
+  <li>TCC 方案</li>
+  <li>本地消息表</li>
+  <li>可靠消息最终一致性方案</li>
+  <li>最大努力通知方案</li>
+  <li>SAGA</li>
+</ol>
+
+<h2 id="xa">XA</h2>
+<p>XA 是 X/Open CAE Specification (Distributed Transaction Processing)模型，它定义的 TM（Transaction Manager）与 RM（Resource Manager）之间进行通信的接口。</p>
+
+<p>Java中 的 javax.transaction.xa.XAResource 定义了 XA 接口，它依赖数据库厂商对 jdbc-driver 的具体实现。</p>
+
+<p>mysql-connector-java-5.1.30 的实现可参 com.mysql.jdbc.jdbc2.optional.MysqlXAConnection 类。
+在 XA 规范中，数据库充当 RM 角色，应用需要充当 TM 的角色，即生成全局的 txId ，调用 XAResource 接口，把多个本地事务协调为全局统一的分布式事务。</p>
+
+<p>目前 XA 有两种实现：</p>
+
+<ol>
+  <li>
+    <p>基于一阶段提交( 1PC ) 的弱 XA 。</p>
+  </li>
+  <li>
+    <p>基于二阶段提交( 2PC ) 的强 XA 。</p>
+  </li>
+</ol>
+
+<h3 id="弱xa">弱XA</h3>
+<p>弱 XA 通过去掉 XA 的 Prepare 阶段，以达到减少资源锁定范围而提升并发性能的效果。典型的实现为在一个业务线程中，遍历所有的数据库连接，依次做 commit 或者 rollback。同本地事务相比，性能损耗低，但在事务提交的执行过程中，若出现网络故障、数据库宕机等预期之外的异常，将会造成数据不一致，且无法进行回滚。
+目前 MyCAT、Sharding-Sphere 默认支持。</p>
+<h3 id="强xa">强XA</h3>
+<p>二阶段提交是 XA 的标准实现。它将分布式事务的提交拆分为 2 个阶段：prepare 和 commit/rollback 。
+    - 第一阶段：事务管理器要求每个涉及到事务的数据库预提交(precommit)此操作，并反映是否可以提交。
+    - 第二阶段：事务协调器要求每个数据库提交数据，或者回滚数据。
+开启 XA 全局事务后，所有子事务会按照本地默认的隔离级别锁定资源，并记录 undo 和 redo 日志。然后由 TM 发起 prepare 投票，询问所有的子事务是否可以进行提交：
+    - 当所有子事务反馈的结果为 “yes” 时，TM 再发起 commit 。
+    - 若其中任何一个子事务反馈的结果为“no”，TM 则发起 rollback 。
+    -如果在 prepare 阶段的反馈结果为 “yes” ，而 commit 的过程中出现宕机等异常时，则在节点服务重启后，可根据 XA recover 再次进行 commit 补偿，以保证数据的一致性。</p>
+
+<p>尽量保证了数据的强一致，实现成本较低，在各大主流数据库都有自己实现，对于 MySQL 是从 5.5 开始支持。但会有很多问题</p>
+<ol>
+  <li>单点问题：事务管理器在整个流程中扮演的角色很关键，如果其宕机，比如在第一阶段已经完成，在第二阶段正准备提交的时候事务管理器宕机，资源管理器就会一直阻塞，导致数据库无法使用。</li>
+  <li>同步阻塞：在准备就绪之后，资源管理器中的资源一直处于阻塞，直到提交完成，释放资源</li>
+  <li>数据不一致：两阶段提交协议虽然为分布式数据强一致性所设计，但仍然存在数据不一致性的可能，比如在第二阶段中，假设协调者发出了事务commit 的通知，但是因为网络问题该通知仅被一部分参与者所收到并执行了 commit 操作，其余的参与者则因为没有收到通知一直处于阻塞状态，这时候就产生了数据的不一致性。
+可以采用现成的 Sharding Sphere来解决， 支持基于 XA 的强一致性事务解决方案，可以通过 SPI 注入不同的第三方组件作为事务管理器实现 XA 协议，如 Atomikos 和 Narayana 。
+这个方案很少用————数据库一般不能跨服务操作————自己的服务有自己的数据库。一个反例是马云爸爸的88会员，真的🐂🍺。</li>
+</ol>
+
+<h2 id="tcc">TCC</h2>
+<p>TCC 模型是把锁的粒度完全交给业务处理，它需要每个子事务业务都实现Try-Confirm / Cancel 接口，其本质也是 2PC ，只是 TCC 在应用层控制。</p>
+<h3 id="过程">过程</h3>
+<ol>
+  <li>Try:
+    <ul>
+      <li>尝试执行业务</li>
+      <li>完成所有业务检查（一致性）</li>
+      <li>预留必须业务资源（准隔离性）</li>
+    </ul>
+  </li>
+  <li>Confirm:
+    <ul>
+      <li>确认执行业务；</li>
+      <li>真正执行业务，不作任何业务检查</li>
+      <li>只使用Try阶段预留的业务资源</li>
+      <li>Confirm 操作满足幂等性</li>
+    </ul>
+  </li>
+  <li>Cancel:
+    <ul>
+      <li>取消执行业务</li>
+      <li>释放Try阶段预留的业务资源</li>
+      <li>Cancel操作满足幂等性
+这三个阶段，都会按本地事务的方式执行。不同于 XA的prepare ，TCC 无需将 XA 的投票期间的所有资源挂起，因此极大的提高了吞吐量。</li>
+    </ul>
+  </li>
+</ol>
+
+<h3 id="举例">举例</h3>
+<p>A –&gt; B 汇款100元。那么汇款服务和收款服务分别需要实现，Try-Confirm-Cancel 接口，并在业务初始化阶段将其注入到 TCC 事务管理器中。
+汇款服务</p>
+<ol>
+  <li>Try：
+    <ul>
+      <li>检查A账户有效性，即查看A账户的状态是否为“转帐中”或者“冻结”</li>
+      <li>检查A账户余额是否充足</li>
+      <li>从A账户中扣减 100 元，并将状态置为“转账中”</li>
+      <li>预留扣减资源，将从 A 往 B 账户转账 100 元这个事件存入消息或者日志中</li>
+    </ul>
+  </li>
+  <li>Confirm：
+    <ul>
+      <li>不做任何操作</li>
+    </ul>
+  </li>
+  <li>Cancel：
+    <ul>
+      <li>A 账户增加 100 元</li>
+      <li>从日志或者消息中，释放扣减资源
+收钱服务</li>
+    </ul>
+  </li>
+  <li>Try：
+    <ul>
+      <li>检查 B 账户账户是否有效；</li>
+    </ul>
+  </li>
+  <li>Confirm：
+    <ul>
+      <li>读取日志或者消息，B 账户增加 100 元</li>
+      <li>从日志或者消息中，释放扣减资源；</li>
+    </ul>
+  </li>
+  <li>Cancel：
+    <ul>
+      <li>不做任何操作
+由此可以看出，TCC 模型对业务的侵入强，改造的难度大。尽量不用，因为代码，尤其是回滚很麻烦。
+但是，在需要前置资源锁定的场景，不得不使用 XA 或 TCC 的方式。再例如说，下单场景，在订单创建之前，需要扣除如下几个资源：</li>
+    </ul>
+  </li>
+</ol>
+
+<ul>
+  <li>优惠劵</li>
+  <li>钱包余额</li>
+  <li>积分</li>
+</ul>
+
+<p>那么，不得不进行前置多资源锁定，无非是使用 XA 的强锁，还是 TCC 的弱锁。在 oceans 的 tag 0.0.1 中，在未使用 TCC 的情况下，模拟 TCC 的效果的苦闷。</p>
+
+<h2 id="本地消息表">本地消息表</h2>
+<p><img src="/img/in-post/02EDF3EDC128207E5786CC98F8722538.jpg" alt="插图" /></p>
+<ol>
+  <li>A 系统在自己本地一个事务里操作同时，插入一条数据到消息表；</li>
+  <li>
+    <p>接着 A 系统将这个消息发送到 MQ 中去；</p>
+  </li>
+  <li>B 系统接收到消息之后，在一个事务里，往自己本地消息表里插入一条数据，同时执行其他的业务操作，如果这个消息已经被处理过了，那么此时这个事务会回滚，这样保证不会重复处理消息；</li>
+  <li>B 系统执行成功之后，就会更新自己本地消息表的状态以及 A 系统消息表的状态；</li>
+  <li>如果 B 系统处理失败了，那么就不会更新消息表状态，那么此时 A 系统会定时扫描自己的消息表，如果有未处理的消息，会再次发送到 MQ 中去，让 B 再次处理；</li>
+  <li>这个方案保证了最终一致性，哪怕 B 事务失败了，但是 A 会不断重发消息，直到 B 那边成功为止。</li>
+</ol>
+
+<h2 id="可靠消息最终一致性方案">可靠消息最终一致性方案</h2>
+<p>不要用本地的消息表了，直接基于 MQ 来实现事务，具体如下
+<img src="/img/in-post/3507F4657A6C7DA9A2346EB210888D9E.jpg" alt="插图" /></p>
+<ol>
+  <li>A 系统先发送一个 prepared 消息到 mq，如果这个 prepared 消息发送失败那么就直接取消操作别执行了；</li>
+  <li>如果这个消息发送成功过了，那么接着执行本地事务，如果成功就告诉 mq 发送确认消息，如果失败就告诉 mq 回滚消息；</li>
+  <li>如果发送了确认消息，那么此时 B 系统会接收到确认消息，然后执行本地的事务；</li>
+  <li>mq 会自动定时轮询所有 prepared 消息回调你的接口，问你，这个消息是不是本地事务处理失败了，所有没发送确认的消息，是继续重试还是回滚？一般来说这里你就可以查下数据库看之前本地事务是否执行，如果回滚了，那么这里也回滚吧。这个就是避免可能本地事务执行成功了，而确认消息却发送失败了。</li>
+  <li>这个方案里，要是系统 B 的事务失败了咋办？重试咯，自动不断重试直到成功，如果实在是不行，要么就是针对重要的资金类业务进行回滚，比如 B 系统本地回滚后，想办法通知系统 A 也回滚；或者是发送报警由人工来手工回滚和补偿。</li>
+</ol>
+
+<h1 id="总结">总结</h1>
+<p>TCC 和 MQ 都是以服务为范围进行分布式事务的处理，而 XA、BED、SAGA 则是以数据库为范围进行分布式处理。
+对于数据库中间件来说，更趋向于选择后者，对于业务而言侵入小，改造的成本低。
+Ps: 两个 2PC 事务的开源框架，<a href="https://github.com/Dromara/Raincat">Raincat</a>&amp;<a href="https://github.com/codingapi/tx-lcn">LCN</a></p>
+
+<h1 id="参考资料">参考资料</h1>
+<ol>
+  <li><a href="https://my.oschina.net/lhztt/blog/915533">分布式系统理论（一）：CAP定理</a></li>
+  <li><a href="https://queue.acm.org/detail.cfm?id=1394128">Base: An Acid Alternative</a></li>
+</ol>
+
+
+                <hr style="visibility: hidden;">
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2019/06/16/RCU/" data-toggle="tooltip" data-placement="top" title="了解并发编程中的RCU">
+                        Previous<br>
+                        <span>了解并发编程中的RCU</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2019/08/01/Rust-%E7%9A%84%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86/" data-toggle="tooltip" data-placement="top" title="Rust 的错误处理">
+                        Next<br>
+                        <span>Rust 的错误处理</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+                <hr style="visibility: hidden;">
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                    
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+
+
+<section>
+    
+        <hr class="hidden-sm hidden-xs">
+    
+    <h5><a href="/archive/">FEATURED TAGS</a></h5>
+    <div class="tags">
+        
+        
+        
+        </a>
+        
+        
+                <a data-sort="0023" 
+                    href="/archive/?tag=%E5%B9%B6%E5%8F%91"
+                    title="并发"
+                    rel="4">并发</a>
+        
+                <a data-sort="0020" 
+                    href="/archive/?tag=%E7%AC%94%E8%AE%B0"
+                    title="笔记"
+                    rel="7">笔记</a>
+        
+                <a data-sort="0023" 
+                    href="/archive/?tag=%E7%AE%97%E6%B3%95"
+                    title="算法"
+                    rel="4">算法</a>
+        
+                <a data-sort="0024" 
+                    href="/archive/?tag=%E5%AE%9E%E8%B7%B5"
+                    title="实践"
+                    rel="3">实践</a>
+        
+                <a data-sort="0024" 
+                    href="/archive/?tag=Golang"
+                    title="Golang"
+                    rel="3">Golang</a>
+        
+                <a data-sort="0024" 
+                    href="/archive/?tag=Java"
+                    title="Java"
+                    rel="3">Java</a>
+        
+                <a data-sort="0024" 
+                    href="/archive/?tag=Summary"
+                    title="Summary"
+                    rel="3">Summary</a>
+        
+                <a data-sort="0025" 
+                    href="/archive/?tag=%E5%88%86%E5%B8%83%E5%BC%8F"
+                    title="分布式"
+                    rel="2">分布式</a>
+        
+                <a data-sort="0025" 
+                    href="/archive/?tag=%E9%87%8D%E6%9E%84"
+                    title="重构"
+                    rel="2">重构</a>
+        
+                <a data-sort="0025" 
+                    href="/archive/?tag=Clean+Code"
+                    title="Clean Code"
+                    rel="2">Clean Code</a>
+        
+                <a data-sort="0025" 
+                    href="/archive/?tag=Netty"
+                    title="Netty"
+                    rel="2">Netty
+    </div>
+</section>
+
+
+                <!-- Friends Blog -->
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+<!-- add support for mathjax by voleking-->
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "ubiqueadam";
+    var disqus_identifier = "/2019/07/14/分布式事务的学习笔记";
+    var disqus_url = "http://localhost:4000/2019/07/14/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E7%9A%84%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <!-- SNS Link -->
+                
+
+
+<ul class="list-inline text-center">
+
+
+  
+  
+  
+  
+  
+  
+  <li>
+    <a target="_blank" href="https://github.com/ubique0305">
+      <span class="fa-stack fa-lg">
+        <i class="fa fa-circle fa-stack-2x"></i>
+        <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+      </span>
+    </a>
+  </li>
+  
+  
+</ul>
+
+                <p class="copyright text-muted">
+                    Copyright &copy; Ubik Blog 2019
+                    <br>
+                    Powered by <a href="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true">Hux Blog</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/hux-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+
+
+
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-139441319-1';
+    var _gaDomain = 'ubique0305.github.io';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+<!-- Baidu Tongji -->
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if ('' == 'true') {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

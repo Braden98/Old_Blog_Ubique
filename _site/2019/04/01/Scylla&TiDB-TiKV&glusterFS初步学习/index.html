@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="description" content="关于技术与生活，探索与分享 | 丁彪，Programmer,Software Engineer,amateur writer | 这里是 @Ubik丁彪 的个人博客，与你一起发现更大的世界。">
+    <meta name="keywords"  content="丁彪, Ubik丁彪, Ubik, AdamUbik, 丁彪的博客, Ubik Blog, 博客, 个人网站, 互联网, Web, 后端, 架构 ">
+    <meta name="theme-color" content="#000000">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Scylla&TiDB TiKV&CQL 入门 - 丁彪的博客 | Ubik Blog">
+    
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="实习的第一件事就是读本组产品的 API 文档，然后学习系统用到的底层框架。这些东西之前从没看过
+TiDB
+概念
+
+  OLTP (Online Transactional Processing)
+
+
+">
+    
+    <meta property="article:published_time" content="2019-04-01T19:00:00Z">
+    
+    
+    <meta property="article:author" content="Ubik">
+    
+    
+    <meta property="article:tag" content="实习">
+    
+    <meta property="article:tag" content="数据库">
+    
+    <meta property="article:tag" content="笔记">
+    
+    
+    <meta property="og:image" content="http://localhost:4000/img/avatar-ubik-ny.png">
+    <meta property="og:url" content="http://localhost:4000/2019/04/01/Scylla&TiDB-TiKV&glusterFS%E5%88%9D%E6%AD%A5%E5%AD%A6%E4%B9%A0/">
+    <meta property="og:site_name" content="丁彪的博客 | Ubik Blog">
+    
+    <title>Scylla&TiDB TiKV&CQL 入门 - 丁彪的博客 | Ubik Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="http://localhost:4000/2019/04/01/Scylla&TiDB-TiKV&glusterFS%E5%88%9D%E6%AD%A5%E5%AD%A6%E4%B9%A0/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/hux-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Ubik Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    
+                    
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    
+                    
+                    <li>
+                        <a href="/archive/">Archive</a>
+                    </li>
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Image to hack wechat -->
+<!-- <img src="/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="/img/home-bg-o.jpg" width="0" height="0"> -->
+
+<!-- Post Header -->
+
+
+
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg-o.jpg');
+        background: ;
+    }
+
+    
+</style>
+
+<header class="intro-header" >
+
+    <div class="header-mask"></div>
+    
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/archive/?tag=%E5%AE%9E%E4%B9%A0" title="实习">实习</a>
+                        
+                        <a class="tag" href="/archive/?tag=%E6%95%B0%E6%8D%AE%E5%BA%93" title="数据库">数据库</a>
+                        
+                        <a class="tag" href="/archive/?tag=%E7%AC%94%E8%AE%B0" title="笔记">笔记</a>
+                        
+                    </div>
+                    <h1>Scylla&TiDB TiKV&CQL 入门</h1>
+                    
+                    <h2 class="subheading"> 无比硬核的 TiDB 的官方文档与超强的技术 </h2>
+                    <span class="meta">Posted by Ubik on April 1, 2019</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+
+
+
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+				<p>实习的第一件事就是读本组产品的 API 文档，然后学习系统用到的底层框架。这些东西之前从没看过</p>
+<h1 id="tidb">TiDB</h1>
+<h1 id="概念">概念</h1>
+<ul>
+  <li>
+    <p>OLTP (Online Transactional Processing)</p>
+  </li>
+  <li>
+    <p>OLAP (Online Analytical Processing)</p>
+  </li>
+</ul>
+
+<p>通过单机的 RocksDB，我们可以将数据快速地存储在磁盘上；通过 Raft，我们可以将数据复制到多台机器上，以防单机失效。数据的写入是通过 Raft 这一层的接口写入，而不是直接写 RocksDB。通过实现 Raft，我们拥有了一个分布式的 KV，现在再也不用担心某台机器挂掉了。</p>
+
+<p>对于一个 KV 系统，将数据分散在多台机器上有两种比较典型的方案：一种是按照 Key 做 Hash，根据 Hash 值选择对应的存储节点；另一种是分 Range，某一段连续的 Key 都保存在一个存储节点上。TiKV 选择了第二种方式，将整个 Key-Value 空间分成很多段，每一段是一系列连续的 Key，我们将每一段叫做一个 Region，并且我们会尽量保持每个 Region 中保存的数据不超过一定的大小(这个大小可以配置，目前默认是 64mb)。每一个 Region 都可以用 StartKey 到 EndKey 这样一个左闭右开区间来描述。</p>
+
+<p>TiKV 集群是 TiDB 数据库的分布式 KV 存储引擎，数据以 Region 为单位进行复制和管理，每个 Region 会有多个 Replica（副本），这些 Replica 会分布在不同的 TiKV 节点上，其中 Leader 负责读/写，Follower 负责同步 Leader 发来的 raft log</p>
+
+<p><img src="/img/in-post/3DE33801F12030F0CB76AFE53384C6AA.jpg" alt="插图" /></p>
+
+<p>在 KV 结构上保存 Table 以及如何在 KV 结构上运行 SQL 语句</p>
+
+<h1 id="glusterfs">glusterFS</h1>
+<h1 id="简介">简介</h1>
+<p>GlusterFS (Gluster File System) 是一个开源的分布式文件系统，是 Scale-Out 存储解决方案 Gluster 的核心，具有强大的横向扩展能力，通过扩展能够支持数PB存储容量和处理数千客户端。借助 TCP/IP 或 InfiniBand RDMA 网络将物理分布的存储资源聚集在一起，使用单一全局命名空间来管理数据。</p>
+
+<h1 id="scylla介绍">scylla介绍</h1>
+<p>开源的分布式NoSQL数据存储。与Apache Cassandra兼容，同时实现更高的吞吐量和更低的延迟。
+<a href="http://www.nosqlnotes.com/technotes/scylla-highlights/">号称十倍性能于Cassandra的ScyllaDB，究竟祭出了哪些技术”利器”？</a></p>
+<h1 id="cassandra">Cassandra</h1>
+<p>Apache Cassandra（社区内一般简称为C*）是一套开源分布式NoSQL数据库系统。它最初由Facebook开发，用于储存收件箱等简单格式数据，具有高度可扩展性，可用于管理大量的结构化数据。它提供高可用性，没有单点故障,集Google BigTable的数据模型与Amazon Dynamo的完全分布式架构于一身。
+Cassandra使用了Google 设计的 BigTable的数据模型，与面向行(row)的传统的关系型数据库或键值存储的key-value数据库不同，Cassandra使用的是宽列存储模型(Wide Column Stores)[8]，每行数据由row key唯一标识之后，可以有最多20亿个列[11]，每个列有一个column key标识，每个column key下对应若干value。这种模型可以理解为是一个二维的key-value存储，即整个数据模型被定义成一个类似map&lt;key1, map&lt;key2,value»的类型。 
+<a href="https://zh.wikipedia.org/wiki/Cassandra">wiki百科</a></p>
+<h1 id="cassandra-query-language-cql-语法">Cassandra Query Language (CQL) 语法</h1>
+<p>与SQL语法类似，但不支持join和子查询
+结构类似HBase，row x key x value
+常用命令</p>
+<ul>
+  <li>describe tables</li>
+  <li>describe keyspaces</li>
+  <li>source 执行包含命令的文件</li>
+</ul>
+
+<p>键空间是一个定义节点上数据复制的命名空间，集群中每个节点对应一个键空间。
+键、表、行关系通过expand on expand off 可以看的很明白
+如下</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+</pre></td><td class="rouge-code"><pre><span class="n">cqlsh</span><span class="p">:</span><span class="n">tutorialspoint</span><span class="o">&gt;</span> <span class="k">SELECT</span> <span class="o">*</span> <span class="k">from</span> <span class="n">emp</span>
+                  <span class="p">...</span> <span class="p">;</span>
+
+<span class="o">@</span> <span class="k">Row</span> <span class="mi">1</span>
+<span class="c1">-----------+------------</span>
+ <span class="n">emp_id</span>    <span class="o">|</span> <span class="mi">4</span>
+ <span class="n">emp_city</span>  <span class="o">|</span> <span class="n">Pune</span>
+ <span class="n">emp_name</span>  <span class="o">|</span> <span class="n">rajeev</span>
+ <span class="n">emp_phone</span> <span class="o">|</span> <span class="mi">9848022331</span>
+ <span class="n">emp_sal</span>   <span class="o">|</span> <span class="mi">30000</span>
+
+<span class="o">@</span> <span class="k">Row</span> <span class="mi">2</span>
+<span class="c1">-----------+------------</span>
+ <span class="n">emp_id</span>    <span class="o">|</span> <span class="mi">3</span>
+ <span class="n">emp_city</span>  <span class="o">|</span> <span class="k">null</span>
+ <span class="n">emp_name</span>  <span class="o">|</span> <span class="k">null</span>
+ <span class="n">emp_phone</span> <span class="o">|</span> <span class="k">null</span>
+ <span class="n">emp_sal</span>   <span class="o">|</span> <span class="mi">50000</span>
+
+<span class="p">(</span><span class="mi">2</span> <span class="k">rows</span><span class="p">)</span>
+<span class="n">cqlsh</span><span class="p">:</span><span class="n">tutorialspoint</span><span class="o">&gt;</span> <span class="k">SELECT</span> <span class="o">*</span> <span class="k">from</span> <span class="n">emp</span>  <span class="p">;</span>
+
+ <span class="n">emp_id</span> <span class="o">|</span> <span class="n">emp_city</span> <span class="o">|</span> <span class="n">emp_name</span> <span class="o">|</span> <span class="n">emp_phone</span>  <span class="o">|</span> <span class="n">emp_sal</span>
+<span class="c1">--------+----------+----------+------------+---------</span>
+      <span class="mi">4</span> <span class="o">|</span>     <span class="n">Pune</span> <span class="o">|</span>   <span class="n">rajeev</span> <span class="o">|</span> <span class="mi">9848022331</span> <span class="o">|</span>   <span class="mi">30000</span>
+      <span class="mi">3</span> <span class="o">|</span>     <span class="k">null</span> <span class="o">|</span>     <span class="k">null</span> <span class="o">|</span>       <span class="k">null</span> <span class="o">|</span>   <span class="mi">50000</span>
+
+</pre></td></tr></tbody></table></code></pre></div></div>
+<h1 id="创建keyspace">创建keyspace</h1>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre><span class="k">CREATE</span> <span class="n">KEYSPACE</span> <span class="err">“</span><span class="n">KeySpace</span> <span class="n">Name</span><span class="err">”</span>
+<span class="k">WITH</span> <span class="n">replication</span> <span class="o">=</span> <span class="err">{</span><span class="s1">'class'</span><span class="p">:</span> <span class="err">‘</span><span class="n">Strategy</span> <span class="n">name</span><span class="err">’</span><span class="p">,</span> <span class="s1">'replication_factor'</span> <span class="p">:</span> <span class="err">‘</span><span class="k">No</span><span class="p">.</span><span class="k">Of</span>   <span class="n">replicas</span><span class="err">’}</span><span class="p">;</span>
+
+<span class="k">CREATE</span> <span class="n">KEYSPACE</span> <span class="err">“</span><span class="n">KeySpace</span> <span class="n">Name</span><span class="err">”</span>
+<span class="k">WITH</span> <span class="n">replication</span> <span class="o">=</span> <span class="err">{</span><span class="s1">'class'</span><span class="p">:</span> <span class="err">‘</span><span class="n">Strategy</span> <span class="n">name</span><span class="err">’</span><span class="p">,</span> <span class="s1">'replication_factor'</span> <span class="p">:</span> <span class="err">‘</span><span class="k">No</span><span class="p">.</span><span class="k">Of</span>  <span class="n">replicas</span><span class="err">’}</span>
+
+<span class="k">AND</span> <span class="n">durable_writes</span> <span class="o">=</span> <span class="err">‘</span><span class="n">Boolean</span> <span class="n">value</span><span class="err">’</span><span class="p">;</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>其中复制选项用于指定副本位置策略和所需副本的数量，另一个是是否持久化</p>
+<h1 id="修改keyspace">修改keyspace</h1>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="rouge-code"><pre><span class="k">ALTER</span> <span class="n">KEYSPACE</span> <span class="err">“</span><span class="n">KeySpace</span> <span class="n">Name</span><span class="err">”</span>
+<span class="k">WITH</span> <span class="n">replication</span> <span class="o">=</span> <span class="err">{</span><span class="s1">'class'</span><span class="p">:</span> <span class="err">‘</span><span class="n">Strategy</span> <span class="n">name</span><span class="err">’</span><span class="p">,</span> <span class="s1">'replication_factor'</span> <span class="p">:</span> <span class="err">‘</span><span class="k">No</span><span class="p">.</span><span class="k">Of</span>  <span class="n">replicas</span><span class="err">’}</span><span class="p">;</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>对创建时的两个属性，复制和持久化作出修改</p>
+<h1 id="删除keysopce">删除keysopce</h1>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="k">DROP</span> <span class="n">KEYSPACE</span> <span class="err">“</span><span class="n">KeySpace</span> <span class="n">name</span><span class="err">”</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<h2 id="创建表">创建表</h2>
+<p>语法与实例如下</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+</pre></td><td class="rouge-code"><pre><span class="k">CREATE</span> <span class="p">(</span><span class="k">TABLE</span> <span class="o">|</span> <span class="n">COLUMNFAMILY</span><span class="p">)</span> <span class="o">&lt;</span><span class="n">tablename</span><span class="o">&gt;</span>
+<span class="p">(</span><span class="s1">'&lt;column-definition&gt;'</span> <span class="p">,</span> <span class="s1">'&lt;column-definition&gt;'</span><span class="p">)</span>
+<span class="p">(</span><span class="k">WITH</span> <span class="o">&lt;</span><span class="k">option</span><span class="o">&gt;</span> <span class="k">AND</span> <span class="o">&lt;</span><span class="k">option</span><span class="o">&gt;</span><span class="p">)</span>
+
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">emp</span><span class="p">(</span>
+   <span class="n">emp_id</span> <span class="n">int</span> <span class="k">PRIMARY</span> <span class="k">KEY</span><span class="p">,</span>
+   <span class="n">emp_name</span> <span class="n">text</span><span class="p">,</span>
+   <span class="n">emp_city</span> <span class="n">text</span><span class="p">,</span>
+   <span class="n">emp_sal</span> <span class="n">varint</span><span class="p">,</span>
+   <span class="n">emp_phone</span> <span class="n">varint</span>
+   <span class="p">);</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<h2 id="修改表">修改表</h2>
+<p>语法与实例如下</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre></td><td class="rouge-code"><pre><span class="k">ALTER</span> <span class="p">(</span><span class="k">TABLE</span> <span class="o">|</span> <span class="n">COLUMNFAMILY</span><span class="p">)</span> <span class="o">&lt;</span><span class="n">tablename</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">instruction</span><span class="o">&gt;</span>
+
+<span class="k">alter</span> <span class="k">table</span> <span class="n">tablename</span> <span class="k">add</span> <span class="k">new</span> <span class="k">column</span> <span class="n">datatype</span>
+
+<span class="k">alter</span> <span class="k">table</span> <span class="n">emp</span> <span class="k">add</span> <span class="n">emp_email</span> <span class="n">text</span>
+
+<span class="k">alter</span> <span class="k">table</span> <span class="n">tablename</span> <span class="k">drop</span> <span class="k">column</span> <span class="n">name</span>
+
+<span class="k">alter</span> <span class="k">table</span> <span class="n">emp</span> <span class="k">drop</span> <span class="n">emp_email</span>
+
+</pre></td></tr></tbody></table></code></pre></div></div>
+<h2 id="删除表">删除表</h2>
+<p>语法与实例如下</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="k">drop</span> <span class="k">table</span> <span class="n">tablename</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<h2 id="截断表">截断表</h2>
+<p>(把数据都弄没）</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="k">truncate</span> <span class="n">tabblename</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<h2 id="创建删除索引">创建、删除索引</h2>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="rouge-code"><pre><span class="k">create</span> <span class="k">index</span> <span class="n">identifier</span> <span class="k">on</span> <span class="n">tablename</span>
+<span class="k">create</span> <span class="k">index</span> <span class="n">name</span> <span class="k">on</span> <span class="n">emp1</span>
+<span class="k">drop</span> <span class="k">index</span> <span class="n">identifier</span>
+<span class="k">drop</span> <span class="k">index</span> <span class="n">name</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<h2 id="批处理">批处理</h2>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="rouge-code"><pre><span class="k">begin</span> <span class="n">batch</span> 
+<span class="o">&lt;</span><span class="k">insert</span><span class="o">-</span><span class="n">stmt</span><span class="o">&gt;/</span> <span class="o">&lt;</span><span class="k">update</span><span class="o">-</span><span class="n">stmt</span><span class="o">&gt;/</span> <span class="o">&lt;</span><span class="k">delete</span><span class="o">-</span><span class="n">stmt</span><span class="o">&gt;</span>
+<span class="n">apply</span> <span class="n">batch</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<h1 id="curd">CURD</h1>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td><td class="rouge-code"><pre><span class="k">insert</span> <span class="k">into</span> <span class="n">tablename</span> <span class="p">(</span><span class="n">column1name</span><span class="p">,</span><span class="n">column2name</span><span class="p">...)</span> <span class="k">values</span> <span class="p">(</span><span class="n">value1</span><span class="p">,</span><span class="n">value2</span><span class="p">...)</span> <span class="k">using</span> <span class="o">&lt;</span><span class="k">option</span><span class="o">&gt;</span>
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">emp</span> <span class="p">(</span><span class="n">emp_id</span><span class="p">,</span> <span class="n">emp_city</span> <span class="p">,</span> <span class="n">emp_name</span> <span class="p">,</span> <span class="n">emp_phone</span><span class="p">,</span> <span class="n">emp_sal</span> <span class="p">)</span> <span class="k">values</span><span class="p">(</span><span class="mi">250</span><span class="p">,</span><span class="s1">'nanjing'</span><span class="p">,</span><span class="s1">'nidie'</span><span class="p">,</span><span class="mi">1234567</span><span class="p">,</span><span class="mi">88888</span><span class="p">)</span>  <span class="p">;(</span><span class="n">cql</span><span class="err">中使用单引号）</span>
+
+<span class="k">update</span> <span class="n">tablename</span> <span class="k">set</span> <span class="n">columnname</span><span class="o">=</span><span class="n">value</span><span class="p">...</span> <span class="k">where</span> <span class="n">condition</span>
+<span class="k">update</span> <span class="n">emp</span> <span class="k">set</span> <span class="n">emp_city</span> <span class="o">=</span> <span class="s1">'PPPPP'</span> <span class="k">WHERE</span> <span class="n">emp_id</span> <span class="o">=</span><span class="mi">250</span> <span class="p">;</span>
+
+<span class="k">select</span> <span class="n">x</span> <span class="k">from</span> <span class="n">tablename</span> <span class="k">where</span> <span class="n">condition</span>
+<span class="k">WHERE</span><span class="err">子句只能用于作为主键的一部分或在其上具有辅助索引的列。</span>
+<span class="err">不给</span><span class="k">where</span><span class="err">子句添加索引的情况下，会报错如下，加索引后就好了。</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<blockquote>
+  <p>InvalidRequest: Error from server: code=2200 [Invalid query] message=”Cannot execute this query as it might involve data filtering and thus may have unpredictable performance. If you want to execute this query despite the performance unpredictability, use ALLOW FILTERING”</p>
+</blockquote>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="rouge-code"><pre><span class="err">删除数据</span>
+<span class="k">delete</span> <span class="n">x</span> <span class="k">from</span> <span class="n">identifier</span> <span class="k">where</span> <span class="n">condition</span>
+<span class="err">与更新一样，不加</span><span class="k">where</span><span class="err">会报语法错误，有</span><span class="k">where</span><span class="err">无条件变量会报</span><span class="k">no</span> <span class="n">viable</span> <span class="n">alternative</span> <span class="k">at</span> <span class="k">input</span> <span class="s1">';'</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<h1 id="数据类型">数据类型</h1>
+<p>CQL提供了许多内置类型包括集合，也可自定义，命令如下
+    CREATE TYPE -创建用户定义的数据类型。</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre>ALTER TYPE -修改用户定义的数据类型。
+
+DROP TYPE -删除用户定义的数据类型。
+
+DESCRIBE TYPE -描述用户定义的数据类型。
+
+DESCRIBE TYPES -描述用户定义的数据类型。
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<h2 id="list">list</h2>
+<p>适用于保持元素顺序且值被多次存储，格式同内建类型，只是插入时用[]括起来，中间,分割。更新时如下</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="rouge-code"><pre><span class="k">UPDATE</span> <span class="k">data</span>
+<span class="p">...</span> <span class="k">SET</span> <span class="n">email</span> <span class="o">=</span> <span class="n">email</span> <span class="o">+</span><span class="p">[</span><span class="s1">'xyz@tutorialspoint.com'</span><span class="p">]</span>
+<span class="p">...</span> <span class="k">where</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">'ramu'</span><span class="p">;</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<h2 id="set">set</h2>
+<p>根据常识，无序且不重复</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+</pre></td><td class="rouge-code"><pre><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">data2</span> <span class="p">(</span><span class="n">name</span> <span class="n">text</span> <span class="k">PRIMARY</span> <span class="k">KEY</span><span class="p">,</span> <span class="n">phone</span> <span class="k">set</span><span class="o">&lt;</span><span class="n">varint</span><span class="o">&gt;</span><span class="p">);</span>
+<span class="err">花括号{}分割</span>
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">data2</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">phone</span><span class="p">)</span><span class="k">VALUES</span> <span class="p">(</span><span class="s1">'rahman'</span><span class="p">,</span>    <span class="err">{</span><span class="mi">9848022338</span><span class="p">,</span><span class="mi">9848022339</span><span class="err">}</span><span class="p">);</span>
+<span class="err">更新时同</span><span class="n">list</span>
+<span class="n">tutorialspoint</span><span class="o">&gt;</span> <span class="k">UPDATE</span> <span class="n">data2</span>
+   <span class="p">...</span> <span class="k">SET</span> <span class="n">phone</span> <span class="o">=</span> <span class="n">phone</span> <span class="o">+</span> <span class="err">{</span><span class="mi">9848022330</span><span class="err">}</span>
+   <span class="p">...</span> <span class="k">where</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">'rahman'</span><span class="p">;</span>
+
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<h2 id="map">map</h2>
+<p>KV对</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">data3</span> <span class="p">(</span><span class="n">name</span> <span class="n">text</span> <span class="k">PRIMARY</span> <span class="k">KEY</span><span class="p">,</span> <span class="n">address</span>
+<span class="k">map</span><span class="o">&lt;</span><span class="k">timestamp</span><span class="p">,</span> <span class="n">text</span><span class="o">&gt;</span><span class="p">);</span>
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">data3</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">address</span><span class="p">)</span>
+   <span class="k">VALUES</span> <span class="p">(</span><span class="s1">'robin'</span><span class="p">,</span> <span class="err">{</span><span class="s1">'home'</span> <span class="p">:</span> <span class="s1">'hyderabad'</span> <span class="p">,</span> <span class="s1">'office'</span> <span class="p">:</span> <span class="s1">'Delhi'</span> <span class="err">}</span> <span class="p">);</span>
+   <span class="k">UPDATE</span> <span class="n">data3</span>
+   <span class="p">...</span> <span class="k">SET</span> <span class="n">address</span> <span class="o">=</span> <span class="n">address</span><span class="o">+</span><span class="err">{</span><span class="s1">'office'</span><span class="p">:</span><span class="s1">'mumbai'</span><span class="err">}</span>
+   <span class="p">...</span> <span class="k">WHERE</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">'robin'</span><span class="p">;</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<h1 id="自定义数据类型">自定义数据类型</h1>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+</pre></td><td class="rouge-code"><pre><span class="k">CREATE</span> <span class="k">TYPE</span> <span class="o">&lt;</span><span class="n">keyspace</span> <span class="n">name</span><span class="o">&gt;</span><span class="p">.</span> <span class="o">&lt;</span><span class="k">data</span> <span class="n">typename</span><span class="o">&gt;</span>
+<span class="p">(</span> <span class="n">variable1</span><span class="p">,</span> <span class="n">variable2</span><span class="p">)</span>
+
+<span class="k">CREATE</span> <span class="k">TYPE</span> <span class="n">tutorialspoint</span><span class="p">.</span><span class="n">card_details</span> <span class="p">(</span>
+   <span class="n">num</span> <span class="n">int</span><span class="p">,</span>
+   <span class="n">pin</span> <span class="n">int</span><span class="p">,</span>
+   <span class="n">name</span> <span class="n">text</span><span class="p">,</span>
+   <span class="n">cvv</span> <span class="n">int</span><span class="p">,</span>
+   <span class="n">phone</span> <span class="k">set</span><span class="o">&lt;</span><span class="n">int</span><span class="o">&gt;</span>
+   <span class="p">);</span>
+   
+<span class="k">ALTER</span> <span class="k">TYPE</span> <span class="n">typename</span>
+<span class="k">ADD</span> <span class="n">field_name</span> <span class="n">field_type</span><span class="p">;</span> 
+
+<span class="n">DESCRIBE_TYPES</span><span class="err">命令验证所有用户定义的数据类型的列表</span>
+
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<h1 id="seastar">Seastar</h1>
+<p>一个用于在现代多核机器上，编写高效复杂的服务器应用程序的C++库。它允许构建高度复杂的服务端应用程序，同时性能很好。它是事件驱动的，允许以相对直接的方式编写非阻塞的异步代码。
+Scylladb第一个使用了Seastar，它是对Apache Cassandra的重写。 Cassandra是一个非常复杂的应用程序，然而，通过Seastar，我们能够让吞吐量提高10倍，同时显著的降低一致性的延迟。</p>
+<blockquote>
+  <p>异步服务器应用程序的作者面临着今天仍面临的两大挑战：</p>
+
+  <p>复杂性：编写简单的异步服务器非常简单。但是编写一个复杂的异步服务器是非常困难的。单个连接的处理，而不是一个简单易读的函数调用，现在涉及大量的小型回调函数和一个复杂的状态机，以记住每个事件发生时需要调用哪个函数。</p>
+
+  <p>非阻塞：每个内核只有一个线程，对于服务器应用程序性能很重要，因为上下文切换很慢。但是，如果我们每个内核只有一个线程，则事件处理函数不能阻塞，否则内核将保持空闲状态。但是一些现有的编程语言和框架让服务器作者别无选择，只能使用阻塞函数，因此也不能使用多线程。例如，Cassandra被编写为一个异步服务器应用程序;但是因为磁盘I/O是用mmaped文件实现的，所以在访问时可以不受控制地阻塞整个线程，它们被迫在每个CPU上运行多个线程。</p>
+</blockquote>
+
+
+                <hr style="visibility: hidden;">
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2019/04/01/%E6%9C%80%E9%95%BF%E5%9B%9E%E6%96%87%E5%AD%90%E4%B8%B2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/" data-toggle="tooltip" data-placement="top" title="最长回文子串的优化过程">
+                        Previous<br>
+                        <span>最长回文子串的优化过程</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2019/04/21/Fork-Join%E6%A1%86%E6%9E%B6/" data-toggle="tooltip" data-placement="top" title="Java 自带的 Fork/Join 框架">
+                        Next<br>
+                        <span>Java 自带的 Fork/Join 框架</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+                <hr style="visibility: hidden;">
+
+                
+                <!-- disqus 评论框 start -->
+                <div class="comment">
+                    <div id="disqus_thread" class="disqus-thread"></div>
+                    
+                </div>
+                <!-- disqus 评论框 end -->
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+
+
+<section>
+    
+        <hr class="hidden-sm hidden-xs">
+    
+    <h5><a href="/archive/">FEATURED TAGS</a></h5>
+    <div class="tags">
+        
+        
+        
+        </a>
+        
+        
+                <a data-sort="0023" 
+                    href="/archive/?tag=%E5%B9%B6%E5%8F%91"
+                    title="并发"
+                    rel="4">并发</a>
+        
+                <a data-sort="0020" 
+                    href="/archive/?tag=%E7%AC%94%E8%AE%B0"
+                    title="笔记"
+                    rel="7">笔记</a>
+        
+                <a data-sort="0023" 
+                    href="/archive/?tag=%E7%AE%97%E6%B3%95"
+                    title="算法"
+                    rel="4">算法</a>
+        
+                <a data-sort="0024" 
+                    href="/archive/?tag=%E5%AE%9E%E8%B7%B5"
+                    title="实践"
+                    rel="3">实践</a>
+        
+                <a data-sort="0024" 
+                    href="/archive/?tag=Golang"
+                    title="Golang"
+                    rel="3">Golang</a>
+        
+                <a data-sort="0024" 
+                    href="/archive/?tag=Java"
+                    title="Java"
+                    rel="3">Java</a>
+        
+                <a data-sort="0024" 
+                    href="/archive/?tag=Summary"
+                    title="Summary"
+                    rel="3">Summary</a>
+        
+                <a data-sort="0025" 
+                    href="/archive/?tag=%E5%88%86%E5%B8%83%E5%BC%8F"
+                    title="分布式"
+                    rel="2">分布式</a>
+        
+                <a data-sort="0025" 
+                    href="/archive/?tag=%E9%87%8D%E6%9E%84"
+                    title="重构"
+                    rel="2">重构</a>
+        
+                <a data-sort="0025" 
+                    href="/archive/?tag=Clean+Code"
+                    title="Clean Code"
+                    rel="2">Clean Code</a>
+        
+                <a data-sort="0025" 
+                    href="/archive/?tag=Netty"
+                    title="Netty"
+                    rel="2">Netty
+    </div>
+</section>
+
+
+                <!-- Friends Blog -->
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+<!-- add support for mathjax by voleking-->
+
+
+
+
+
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "ubiqueadam";
+    var disqus_identifier = "/2019/04/01/Scylla&TiDB TiKV&glusterFS初步学习";
+    var disqus_url = "http://localhost:4000/2019/04/01/Scylla&TiDB-TiKV&glusterFS%E5%88%9D%E6%AD%A5%E5%AD%A6%E4%B9%A0/";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <!-- SNS Link -->
+                
+
+
+<ul class="list-inline text-center">
+
+
+  
+  
+  
+  
+  
+  
+  <li>
+    <a target="_blank" href="https://github.com/ubique0305">
+      <span class="fa-stack fa-lg">
+        <i class="fa fa-circle fa-stack-2x"></i>
+        <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+      </span>
+    </a>
+  </li>
+  
+  
+</ul>
+
+                <p class="copyright text-muted">
+                    Copyright &copy; Ubik Blog 2019
+                    <br>
+                    Powered by <a href="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true">Hux Blog</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/hux-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+
+
+
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-139441319-1';
+    var _gaDomain = 'ubique0305.github.io';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+<!-- Baidu Tongji -->
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+
+        // interop with multilangual 
+        if ('' == 'true') {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

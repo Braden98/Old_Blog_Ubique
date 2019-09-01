@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="description" content="关于技术与生活，探索与分享 | 丁彪，Programmer,Software Engineer,amateur writer | 这里是 @Ubik丁彪 的个人博客，与你一起发现更大的世界。">
+    <meta name="keywords"  content="丁彪, Ubik丁彪, Ubik, AdamUbik, 丁彪的博客, Ubik Blog, 博客, 个人网站, 互联网, Web, 后端, 架构 ">
+    <meta name="theme-color" content="#000000">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="丁彪的博客 | Ubik Blog">
+    
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="一颗种子不落入大地始终是一颗种子">
+    
+    <meta property="og:image" content="http://localhost:4000/img/avatar-ubik-ny.png">
+    <meta property="og:url" content="http://localhost:4000/page3/">
+    <meta property="og:site_name" content="丁彪的博客 | Ubik Blog">
+    
+    <title>丁彪的博客 | Ubik Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="http://localhost:4000/page3/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/hux-blog.min.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Ubik Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    
+                    
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    
+                    
+                    <li>
+                        <a href="/archive/">Archive</a>
+                    </li>
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Page Header -->
+
+
+
+
+
+
+
+<header class="intro-header" style="background-image: url('/img/home-bg.jpg')">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        
+        <div class="site-heading">
+        
+          <h1>Ubik Blog</h1>
+          <span class="subheading">一颗种子不落入大地始终是一颗种子</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<!-- Main Content -->
+<div class="container">
+	<div class="row">
+        
+
+<!-- USE SIDEBAR -->
+    <!-- PostList Container -->
+    		<div class="
+                col-lg-8 col-lg-offset-1
+                col-md-8 col-md-offset-1
+                col-sm-12
+                col-xs-12
+                postlist-container
+            ">
+    			
+<div class="post-preview">
+    <a href="/2019/04/01/%E6%9C%80%E9%95%BF%E5%9B%9E%E6%96%87%E5%AD%90%E4%B8%B2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/">
+        <h2 class="post-title">
+            最长回文子串的优化过程
+        </h2>
+        
+        <h3 class="post-subtitle">
+            从 O(n^3) 到 O(n)
+        </h3>
+        
+        <div class="post-content-preview">
+            
+                这里分享一道有趣的题目，笔者在 POJ 上使用多种不同的方法进行求解，这其中包括最基本的蛮力法、动态规划、分治算法+字符串哈希以及 Manacher 算法和后缀数组。
+问题描述
+
+  聪明的计算机科学的学生安迪正在参加一个算法课，教授问学生一个简单的问题：“你能提出一个有效的算法来找出字符串中最大回文长度吗？”
+如果一个字符串向前和向后读相同，例如“madam”是回文，而“ACM”则不是回文...
+            
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Ubik on April 1, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/04/01/Java-%E4%B8%AD-%E6%8C%89%E9%9C%80%E5%AF%BC%E6%AF%94%E5%8D%95%E7%B1%BB%E5%9E%8B%E5%AF%BC%E5%85%A5%E6%85%A2%E5%A4%9A%E5%B0%91/">
+        <h2 class="post-title">
+            Import * 真的比单项导入慢吗？
+        </h2>
+        
+        <h3 class="post-subtitle">
+             动手测试到底慢多少 
+        </h3>
+        
+        <div class="post-content-preview">
+            
+                在中间件考试的前一天，同学在群里问”写 Corba 代码的时候能使用 import * 吗？”，老师说这样会把无关的类写入字节码，最好不要这样。
+
+因为当时已经学习过编译原理，顺便又在看《深入理解 Java Web 技术内幕》一书，于是对这个说法产生了很大的怀疑：Java 的编译器是如此不智能以至于 Bytecode 这种寸土寸金的地方都要因一句 import * 添加很多无关的字节吗？
+于...
+            
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Ubik on April 1, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/03/23/%E4%BA%8C%E5%8F%89%E6%A0%91%E4%B8%AD%E4%B8%A4%E8%8A%82%E7%82%B9%E7%9A%84%E6%9C%80%E8%BF%91%E5%85%AC%E5%85%B1%E7%A5%96%E5%85%88/">
+        <h2 class="post-title">
+            二叉树中两节点的最近公共祖先问题
+        </h2>
+        
+        <h3 class="post-subtitle">
+            后序遍历、记忆搜索与 Tarjan
+        </h3>
+        
+        <div class="post-content-preview">
+            
+                要求
+
+对于如上所示二叉树，节点8和5的最近公共祖先是2，节点9和6的最近公共祖先是1.
+思路
+对于二叉树问题，一个基本的思路就是遍历，在遍历过程中加入一些操作，本题采用后序遍历。假设遍历左子树的返回结果为 left，右子树的返回结果为 right，当前节点为 cur。
+
+  若 cur=null/o1/o2，返回cur
+  若 left 和right 都为空，说明整个 cur 为 root...
+            
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Ubik on March 23, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/03/22/Trie/">
+        <h2 class="post-title">
+            Trie树的构造与性质
+        </h2>
+        
+        <h3 class="post-subtitle">
+            一种较为通用的解决字符串问题的数据结构
+        </h3>
+        
+        <div class="post-content-preview">
+            
+                定义
+字典树是一种树形解构，利用字符串的公共前缀来节约存储空间，一个保存了8个键的trie结构，”A”, “to”, “tea”, “ted”, “ten”, “i”, “in”, and “inn”如图所示
+
+性质
+字典树基本性质如下
+
+  根节点没有路径字符，其余每一个节点都被一个字符路径找到
+  从根节点到某一节点，将路径上经过的字符连起来为对应字符串
+  每个节点引出的所有字符路径上...
+            
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Ubik on March 22, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/03/13/%E5%B9%82%E7%AD%89%E6%80%A7%E7%9A%84%E6%8E%A2%E7%B4%A2/">
+        <h2 class="post-title">
+            幂等性解决方案初探
+        </h2>
+        
+        <h3 class="post-subtitle">
+            技术上避免抢月饼被开除问题
+        </h3>
+        
+        <div class="post-content-preview">
+            
+                幂等性原是数学上的概念，表述如下
+
+f(f(x)) = f(x)
+
+对应到软件领域，即为多次调用同一接口，结果一致。这里的结果包括服务器数据、状态，不包括返回值（如第一次写入成功，后续应为抛出异常或空操作，删除同理）。简单理解就是接口的可重复调用。
+注意，数学上和工业上的幂等差别非常大，以下考虑都基于工业上的幂等。
+
+举例
+
+
+  
+    前端对同一表单数据的重复提交，后台应该只会产生一个...
+            
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Ubik on March 13, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/03/02/Dynamic_Programming%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92/">
+        <h2 class="post-title">
+            动态规划-入门篇
+        </h2>
+        
+        <h3 class="post-subtitle">
+            两种写法、三个概念与简单题解
+        </h3>
+        
+        <div class="post-content-preview">
+            
+                Leetcode Dynamic Programming 动态规划
+两种写法
+一开始，最基本的思路一般是暴力搜索（递归），从中发现重叠子问题，随后通过维护数据结构避免重复计算，此时即实现自顶向下的记忆化搜索。通过刚才的方法即可推导出动态规划。
+动态规划最重要的有两点，状态的定义和状态转移方程。这两点确定了剩下的只是简单的编码（一般是几重循环）。
+实际编码中，状态定义后数据结构可以进行化简，如...
+            
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Ubik on March 2, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/02/16/%E7%BC%93%E5%AD%98&%E7%BC%93%E5%AD%98%E8%A1%8C%E4%B8%8E%E5%A1%AB%E5%85%85/">
+        <h2 class="post-title">
+            缓存行与性能问题
+        </h2>
+        
+        <h3 class="post-subtitle">
+            一句话：缓存行对齐来避免多线程访问同一缓存时内存屏障导致的缓存失效带来的性能下降
+        </h3>
+        
+        <div class="post-content-preview">
+            
+                缓存
+
+
+
+为了弥补内存和 CPU 之间巨大的性能差距，设置了三级缓存。示意图如上。与此同时，计算机的处理器内核数量也在增加，每个处理器包括多个核，每个核包含寄存器、L1、L2缓存，一个处理器的多个核共享 L3 缓存。不同的存储访问速度不同，寄存器只需一个周期，缓存上需要1-30个周期，主存上需要50-200个周期，磁盘上需要几千万个周期。ls /sys/devices/system/cpu...
+            
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Ubik on February 16, 2019
+    </p>
+</div>
+<hr>
+
+
+<!-- Pager -->
+
+<ul class="pager">
+    
+    <li class="previous">
+        <a href="/page2">&larr; Newer Posts</a>
+    </li>
+    
+    
+</ul>
+
+
+    		</div>
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-3 col-lg-offset-0
+                col-md-3 col-md-offset-0
+                col-sm-12
+                col-xs-12
+                sidebar-container
+            ">
+                <!-- Featured Tags -->
+                
+
+
+<section>
+    
+    <h5><a href="/archive/">FEATURED TAGS</a></h5>
+    <div class="tags">
+        
+        
+        
+        </a>
+        
+        
+                <a data-sort="0023" 
+                    href="/archive/?tag=%E5%B9%B6%E5%8F%91"
+                    title="并发"
+                    rel="4">并发</a>
+        
+                <a data-sort="0020" 
+                    href="/archive/?tag=%E7%AC%94%E8%AE%B0"
+                    title="笔记"
+                    rel="7">笔记</a>
+        
+                <a data-sort="0023" 
+                    href="/archive/?tag=%E7%AE%97%E6%B3%95"
+                    title="算法"
+                    rel="4">算法</a>
+        
+                <a data-sort="0024" 
+                    href="/archive/?tag=%E5%AE%9E%E8%B7%B5"
+                    title="实践"
+                    rel="3">实践</a>
+        
+                <a data-sort="0024" 
+                    href="/archive/?tag=Golang"
+                    title="Golang"
+                    rel="3">Golang</a>
+        
+                <a data-sort="0024" 
+                    href="/archive/?tag=Java"
+                    title="Java"
+                    rel="3">Java</a>
+        
+                <a data-sort="0024" 
+                    href="/archive/?tag=Summary"
+                    title="Summary"
+                    rel="3">Summary</a>
+        
+                <a data-sort="0025" 
+                    href="/archive/?tag=%E5%88%86%E5%B8%83%E5%BC%8F"
+                    title="分布式"
+                    rel="2">分布式</a>
+        
+                <a data-sort="0025" 
+                    href="/archive/?tag=%E9%87%8D%E6%9E%84"
+                    title="重构"
+                    rel="2">重构</a>
+        
+                <a data-sort="0025" 
+                    href="/archive/?tag=Clean+Code"
+                    title="Clean Code"
+                    rel="2">Clean Code</a>
+        
+                <a data-sort="0025" 
+                    href="/archive/?tag=Netty"
+                    title="Netty"
+                    rel="2">Netty
+    </div>
+</section>
+
+
+                <!-- Short About -->
+                <section class="visible-md visible-lg">
+  <hr>
+  <h5><a href="/about/">ABOUT ME</a></h5>
+  <div class="short-about">
+    
+    <img src="/img/avatar-ubik-ny.png" />
+    
+    
+    <p>Programmer<br>爱生活甚于爱生活的意义<br></p>
+    
+    <!-- SNS Link -->
+    
+
+
+<ul class="list-inline">
+
+
+  
+  
+  
+  
+  
+  
+  <li>
+    <a target="_blank" href="https://github.com/ubique0305">
+      <span class="fa-stack fa-lg">
+        <i class="fa fa-circle fa-stack-2x"></i>
+        <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+      </span>
+    </a>
+  </li>
+  
+  
+</ul>
+  </div>
+</section>
+
+                <!-- Friends Blog -->
+                
+    		</div>
+        
+	</div>
+</div>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <!-- SNS Link -->
+                
+
+
+<ul class="list-inline text-center">
+
+
+  
+  
+  
+  
+  
+  
+  <li>
+    <a target="_blank" href="https://github.com/ubique0305">
+      <span class="fa-stack fa-lg">
+        <i class="fa fa-circle fa-stack-2x"></i>
+        <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+      </span>
+    </a>
+  </li>
+  
+  
+</ul>
+
+                <p class="copyright text-muted">
+                    Copyright &copy; Ubik Blog 2019
+                    <br>
+                    Powered by <a href="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true">Hux Blog</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/hux-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script src="/js/snackbar.js "></script>
+<script src="/js/sw-registration.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+
+
+
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-139441319-1';
+    var _gaDomain = 'ubique0305.github.io';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+<!-- Baidu Tongji -->
+
+
+
+<!-- Side Catalog -->
+
+
+
+<!-- Multi-Lingual -->
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>
